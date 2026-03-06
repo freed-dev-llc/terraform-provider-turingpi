@@ -26,12 +26,20 @@ jobs:
       - name: Run tests
         run: go test -v -race ./...
 
+      - name: Get secrets from Bitwarden
+        uses: bitwarden/sm-action@v2
+        with:
+          access_token: ${{ secrets.BW_ACCESS_TOKEN }}
+          secrets: |
+            af4d9a7c-043d-488a-90a6-b405003aa070 > GPG_PRIVATE_KEY
+            1c5f902e-31e6-4057-9de8-b4050055e133 > GPG_PASSPHRASE
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
         id: import_gpg
         with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
+          passphrase: ${{ env.GPG_PASSPHRASE }}
 
       - name: Verify GPG key imported
         run: |
