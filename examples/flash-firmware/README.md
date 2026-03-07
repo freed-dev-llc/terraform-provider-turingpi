@@ -50,8 +50,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [turingpi_flash.node1](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/flash) | resource |
-| [turingpi_flash.node2](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/flash) | resource |
+| [turingpi_flash.node1](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/flash) | resource |
+| [turingpi_flash.node2](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/flash) | resource |
 
 ## Inputs
 

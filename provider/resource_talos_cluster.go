@@ -15,7 +15,7 @@ func resourceTalosCluster() *schema.Resource {
 		Description: "Deploys a Talos Kubernetes cluster on pre-flashed Turing Pi nodes using talosctl.",
 		DeprecationMessage: "turingpi_talos_cluster is deprecated and will be removed in v2.0.0. " +
 			"Use the terraform-turingpi-modules/talos-cluster module instead. " +
-			"See: https://github.com/jfreed-dev/terraform-turingpi-modules",
+			"See: https://github.com/freed-dev-llc/terraform-turingpi-modules",
 		CreateContext: resourceTalosClusterCreate,
 		ReadContext:   resourceTalosClusterRead,
 		UpdateContext: resourceTalosClusterUpdate,

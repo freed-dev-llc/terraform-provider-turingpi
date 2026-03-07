@@ -74,7 +74,7 @@ pre-commit run --all-files
 
 ## Release Process (Maintainers)
 
-Releases are automated via Makefile targets. All releases are GPG-signed and published to the [Terraform Registry](https://registry.terraform.io/providers/jfreed-dev/turingpi).
+Releases are automated via Makefile targets. All releases are GPG-signed and published to the [Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi).
 
 ### Creating a Release
 
@@ -100,8 +100,8 @@ make release-prep VERSION=1.0.10
 ### Post-Release
 
 After the release workflow completes:
-1. Verify the release on [GitHub Releases](https://github.com/jfreed-dev/terraform-provider-turingpi/releases)
-2. Confirm it appears on [Terraform Registry](https://registry.terraform.io/providers/jfreed-dev/turingpi)
+1. Verify the release on [GitHub Releases](https://github.com/freed-dev-llc/terraform-provider-turingpi/releases)
+2. Confirm it appears on [Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi)
 3. Update `CHANGELOG.md` with release notes
 
 ### Requirements

@@ -1,4 +1,4 @@
-module github.com/jfreed-dev/turingpi-terraform-provider
+module github.com/freed-dev-llc/turingpi-terraform-provider
 
 go 1.25.0
 

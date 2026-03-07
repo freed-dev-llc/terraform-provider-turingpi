@@ -1,12 +1,12 @@
 # Terraform Provider for Turing Pi 2.5
 
-[![Terraform Registry](https://img.shields.io/badge/terraform-registry-blueviolet)](https://registry.terraform.io/providers/jfreed-dev/turingpi)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/jfreed-dev/terraform-provider-turingpi)](https://go.dev/)
-[![Go](https://github.com/jfreed-dev/terraform-provider-turingpi/actions/workflows/go.yml/badge.svg)](https://github.com/jfreed-dev/terraform-provider-turingpi/actions/workflows/go.yml)
-[![Security](https://github.com/jfreed-dev/terraform-provider-turingpi/actions/workflows/security.yml/badge.svg)](https://github.com/jfreed-dev/terraform-provider-turingpi/actions/workflows/security.yml)
-[![codecov](https://codecov.io/gh/jfreed-dev/terraform-provider-turingpi/graph/badge.svg)](https://codecov.io/gh/jfreed-dev/terraform-provider-turingpi)
-[![Release](https://img.shields.io/github/v/release/jfreed-dev/terraform-provider-turingpi)](https://github.com/jfreed-dev/terraform-provider-turingpi/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/jfreed-dev/terraform-provider-turingpi/total)](https://github.com/jfreed-dev/terraform-provider-turingpi/releases)
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-blueviolet)](https://registry.terraform.io/providers/freed-dev-llc/turingpi)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/freed-dev-llc/terraform-provider-turingpi)](https://go.dev/)
+[![Go](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/go.yml/badge.svg)](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/go.yml)
+[![Security](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/security.yml/badge.svg)](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/freed-dev-llc/terraform-provider-turingpi/graph/badge.svg)](https://codecov.io/gh/freed-dev-llc/terraform-provider-turingpi)
+[![Release](https://img.shields.io/github/v/release/freed-dev-llc/terraform-provider-turingpi)](https://github.com/freed-dev-llc/terraform-provider-turingpi/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/freed-dev-llc/terraform-provider-turingpi/total)](https://github.com/freed-dev-llc/terraform-provider-turingpi/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 A Terraform provider for managing Turing Pi's Baseboard Management Controller (BMC), enabling power management, firmware flashing, and node provisioning.
@@ -29,7 +29,7 @@ A Terraform provider for managing Turing Pi's Baseboard Management Controller (B
 
 ## Terraform Modules
 
-For cluster deployment, we recommend using the composable [terraform-turingpi-modules](https://github.com/jfreed-dev/terraform-turingpi-modules) repository:
+For cluster deployment, we recommend using the composable [terraform-turingpi-modules](https://github.com/freed-dev-llc/terraform-turingpi-modules) repository:
 
 | Module | Description |
 |--------|-------------|
@@ -48,10 +48,10 @@ The modules repository includes helper scripts for cluster lifecycle management:
 
 | Script | Description |
 |--------|-------------|
-| [`cluster-preflight.sh`](https://github.com/jfreed-dev/terraform-turingpi-modules/blob/main/scripts/cluster-preflight.sh) | Pre-deployment validation (tools, BMC, node connectivity) |
-| [`talos-wipe.sh`](https://github.com/jfreed-dev/terraform-turingpi-modules/blob/main/scripts/talos-wipe.sh) | Wipe Talos cluster (NVMe + eMMC) and shutdown nodes |
-| [`k3s-wipe.sh`](https://github.com/jfreed-dev/terraform-turingpi-modules/blob/main/scripts/k3s-wipe.sh) | Wipe K3s cluster (NVMe + eMMC) and shutdown nodes |
-| [`find-armbian-image.sh`](https://github.com/jfreed-dev/terraform-turingpi-modules/blob/main/scripts/find-armbian-image.sh) | Find Armbian images and generate autoconfig files |
+| [`cluster-preflight.sh`](https://github.com/freed-dev-llc/terraform-turingpi-modules/blob/main/scripts/cluster-preflight.sh) | Pre-deployment validation (tools, BMC, node connectivity) |
+| [`talos-wipe.sh`](https://github.com/freed-dev-llc/terraform-turingpi-modules/blob/main/scripts/talos-wipe.sh) | Wipe Talos cluster (NVMe + eMMC) and shutdown nodes |
+| [`k3s-wipe.sh`](https://github.com/freed-dev-llc/terraform-turingpi-modules/blob/main/scripts/k3s-wipe.sh) | Wipe K3s cluster (NVMe + eMMC) and shutdown nodes |
+| [`find-armbian-image.sh`](https://github.com/freed-dev-llc/terraform-turingpi-modules/blob/main/scripts/find-armbian-image.sh) | Find Armbian images and generate autoconfig files |
 
 > **Note:** The `turingpi_k3s_cluster` and `turingpi_talos_cluster` resources are deprecated and will be removed in v2.0.0. See the [Migration Guide](docs/MIGRATION.md) for upgrade instructions.
 
@@ -59,11 +59,11 @@ The modules repository includes helper scripts for cluster lifecycle management:
 
 - **[Architecture](docs/ARCHITECTURE.md)** - System diagrams, data flows, and component interactions
 - **[Migration Guide](docs/MIGRATION.md)** - Migrate from deprecated cluster resources
-- **[Terraform Registry](https://registry.terraform.io/providers/jfreed-dev/turingpi)** - Provider documentation
+- **[Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi)** - Provider documentation
 
 ## Installation
 
-The provider is available on the [Terraform Registry](https://registry.terraform.io/providers/jfreed-dev/turingpi). Terraform will automatically download it when you run `terraform init`.
+The provider is available on the [Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi). Terraform will automatically download it when you run `terraform init`.
 
 ## Usage
 
@@ -71,7 +71,7 @@ The provider is available on the [Terraform Registry](https://registry.terraform
 terraform {
   required_providers {
     turingpi = {
-      source  = "jfreed-dev/turingpi"
+      source  = "freed-dev-llc/turingpi"
       version = "~> 1.3.8"
     }
   }
@@ -365,7 +365,7 @@ Requires [Go 1.23+](https://go.dev/).
 
 ```bash
 # Clone and build
-git clone https://github.com/jfreed-dev/terraform-provider-turingpi.git
+git clone https://github.com/freed-dev-llc/terraform-provider-turingpi.git
 cd terraform-provider-turingpi
 go build -o terraform-provider-turingpi
 

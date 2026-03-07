@@ -76,7 +76,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [turingpi_k3s_cluster.cluster](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/k3s_cluster) | resource |
+| [turingpi_k3s_cluster.cluster](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/k3s_cluster) | resource |
 
 ## Inputs
 

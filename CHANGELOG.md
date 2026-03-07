@@ -175,9 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 - `turingpi_k3s_cluster` resource - Will be removed in v2.0.0
-  - Migrate to [terraform-turingpi-modules](https://registry.terraform.io/modules/jfreed-dev/modules/turingpi)
+  - Migrate to [terraform-turingpi-modules](https://registry.terraform.io/modules/freed-dev-llc/modules/turingpi)
 - `turingpi_talos_cluster` resource - Will be removed in v2.0.0
-  - Migrate to [terraform-turingpi-modules](https://registry.terraform.io/modules/jfreed-dev/modules/turingpi)
+  - Migrate to [terraform-turingpi-modules](https://registry.terraform.io/modules/freed-dev-llc/modules/turingpi)
 
 ### Added
 - **New pkg/ Subpackages** - Extracted reusable provisioner code
@@ -187,7 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `pkg/k3s/` - K3s cluster provisioner
   - `pkg/talos/` - Talos cluster provisioner
 
-- **Terraform Modules** - Published to [Terraform Registry](https://registry.terraform.io/modules/jfreed-dev/modules/turingpi)
+- **Terraform Modules** - Published to [Terraform Registry](https://registry.terraform.io/modules/freed-dev-llc/modules/turingpi)
   - `modules/flash-nodes` - Flash firmware to Turing Pi nodes
   - `modules/talos-cluster` - Deploy Talos Kubernetes cluster (native Talos provider)
   - `modules/addons/metallb` - MetalLB load balancer
@@ -382,7 +382,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.2] - 2025-12-22
 
 ### Changed
-- Provider source updated to `jfreed-dev/turingpi` for Terraform Registry
+- Provider source updated to `freed-dev-llc/turingpi` for Terraform Registry
 - Simplified installation instructions (auto-download from registry)
 - Consolidated GoReleaser config with GPG signing
 
@@ -422,33 +422,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation workflow with GoReleaser
 - Multi-platform binaries (linux/darwin/windows, amd64/arm64)
 
-[Unreleased]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.10...HEAD
-[1.3.10]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.9...v1.3.10
-[1.3.9]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.8...v1.3.9
-[1.3.8]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.7...v1.3.8
-[1.3.7]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.6...v1.3.7
-[1.3.6]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.5...v1.3.6
-[1.3.5]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.4...v1.3.5
-[1.3.4]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.3...v1.3.4
-[1.3.3]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.2...v1.3.3
-[1.3.2]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.1...v1.3.2
-[1.3.1]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.3.0...v1.3.1
-[1.3.0]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.2.2...v1.3.0
-[1.2.2]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.2.1...v1.2.2
-[1.2.1]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.2.0...v1.2.1
-[1.2.0]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.1.4...v1.2.0
-[1.1.4]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.1.3...v1.1.4
-[1.1.3]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.1.1...v1.1.3
-[1.1.1]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.10...v1.1.0
-[1.0.10]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.9...v1.0.10
-[1.0.9]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.8...v1.0.9
-[1.0.8]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.7...v1.0.8
-[1.0.7]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.6...v1.0.7
-[1.0.6]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.5...v1.0.6
-[1.0.5]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.4...v1.0.5
-[1.0.4]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.3...v1.0.4
-[1.0.3]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.2...v1.0.3
-[1.0.2]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/jfreed-dev/terraform-provider-turingpi/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/jfreed-dev/terraform-provider-turingpi/releases/tag/v1.0.0
+[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.10...HEAD
+[1.3.10]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.9...v1.3.10
+[1.3.9]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.8...v1.3.9
+[1.3.8]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.7...v1.3.8
+[1.3.7]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.6...v1.3.7
+[1.3.6]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.5...v1.3.6
+[1.3.5]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.4...v1.3.5
+[1.3.4]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.3...v1.3.4
+[1.3.3]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.2...v1.3.3
+[1.3.2]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.2.2...v1.3.0
+[1.2.2]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.1.4...v1.2.0
+[1.1.4]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.1.3...v1.1.4
+[1.1.3]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.1.1...v1.1.3
+[1.1.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.10...v1.1.0
+[1.0.10]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.9...v1.0.10
+[1.0.9]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.8...v1.0.9
+[1.0.8]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.7...v1.0.8
+[1.0.7]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.6...v1.0.7
+[1.0.6]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.5...v1.0.6
+[1.0.5]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.4...v1.0.5
+[1.0.4]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.3...v1.0.4
+[1.0.3]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/releases/tag/v1.0.0

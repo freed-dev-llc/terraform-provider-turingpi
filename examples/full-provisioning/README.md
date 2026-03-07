@@ -64,10 +64,10 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [turingpi_node.node1](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/node) | resource |
-| [turingpi_node.node2](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/node) | resource |
-| [turingpi_node.node3](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/node) | resource |
-| [turingpi_node.node4](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/node) | resource |
+| [turingpi_node.node1](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/node) | resource |
+| [turingpi_node.node2](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/node) | resource |
+| [turingpi_node.node3](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/node) | resource |
+| [turingpi_node.node4](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/node) | resource |
 
 ## Inputs
 

@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Documentation
-    url: https://github.com/jfreed-dev/terraform-provider-turingpi#readme
+    url: https://github.com/freed-dev-llc/terraform-provider-turingpi#readme
     about: Check the README for usage examples and configuration options

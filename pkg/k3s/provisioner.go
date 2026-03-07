@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jfreed-dev/turingpi-terraform-provider/pkg/ssh"
+	"github.com/freed-dev-llc/turingpi-terraform-provider/pkg/ssh"
 )
 
 // NodeConfig holds SSH connection details for a K3s node

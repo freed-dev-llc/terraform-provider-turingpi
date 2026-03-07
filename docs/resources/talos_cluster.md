@@ -7,7 +7,7 @@ description: |-
 
 # turingpi_talos_cluster (Resource)
 
-~> **Deprecation Warning:** This resource is deprecated and will be removed in v2.0.0. Please migrate to the [terraform-turingpi-modules](https://github.com/jfreed-dev/terraform-turingpi-modules) repository which uses the native [Talos Terraform Provider](https://registry.terraform.io/providers/siderolabs/talos/latest) and provides separate, composable modules for cluster deployment and addon management.
+~> **Deprecation Warning:** This resource is deprecated and will be removed in v2.0.0. Please migrate to the [terraform-turingpi-modules](https://github.com/freed-dev-llc/terraform-turingpi-modules) repository which uses the native [Talos Terraform Provider](https://registry.terraform.io/providers/siderolabs/talos/latest) and provides separate, composable modules for cluster deployment and addon management.
 
 Deploys a Talos Kubernetes cluster on pre-flashed Turing Pi nodes. This resource uses the `talosctl` CLI for all Talos operations including config generation, bootstrap, and cluster management.
 

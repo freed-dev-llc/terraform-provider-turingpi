@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jfreed-dev/turingpi-terraform-provider/pkg/ssh"
+	"github.com/freed-dev-llc/turingpi-terraform-provider/pkg/ssh"
 )
 
 // MockSSHClient implements ssh.Client for testing

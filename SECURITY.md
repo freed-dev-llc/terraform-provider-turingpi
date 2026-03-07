@@ -29,7 +29,7 @@ All releases are signed with GPG to ensure authenticity and integrity. The Terra
    - `terraform-provider-turingpi_X.Y.Z_SHA256SUMS.sig`
    - The zip file for your platform
 
-2. Import the public key from the [Terraform Registry](https://registry.terraform.io/providers/jfreed-dev/turingpi)
+2. Import the public key from the [Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi)
 
 3. Verify the signature:
    ```bash

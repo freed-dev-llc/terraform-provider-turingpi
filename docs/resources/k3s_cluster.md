@@ -7,7 +7,7 @@ description: |-
 
 # turingpi_k3s_cluster (Resource)
 
-~> **Deprecation Warning:** This resource is deprecated and will be removed in v2.0.0. Please migrate to the [terraform-turingpi-modules](https://github.com/jfreed-dev/terraform-turingpi-modules) repository which provides separate, composable modules for cluster deployment and addon management.
+~> **Deprecation Warning:** This resource is deprecated and will be removed in v2.0.0. Please migrate to the [terraform-turingpi-modules](https://github.com/freed-dev-llc/terraform-turingpi-modules) repository which provides separate, composable modules for cluster deployment and addon management.
 
 Deploys a K3s Kubernetes cluster on pre-flashed Turing Pi nodes. This resource handles K3s server installation on the control plane, agent installation on worker nodes, and optional deployment of MetalLB and NGINX Ingress.
 

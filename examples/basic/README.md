@@ -50,8 +50,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [turingpi_power.node1](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/power) | resource |
-| [turingpi_power.node2](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/power) | resource |
+| [turingpi_power.node1](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/power) | resource |
+| [turingpi_power.node2](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/power) | resource |
 
 ## Inputs
 

@@ -1,6 +1,6 @@
 # Migration Guide: Cluster Resources to Terraform Modules
 
-This guide helps you migrate from the deprecated `turingpi_k3s_cluster` and `turingpi_talos_cluster` resources to the new [terraform-turingpi-modules](https://github.com/jfreed-dev/terraform-turingpi-modules) repository.
+This guide helps you migrate from the deprecated `turingpi_k3s_cluster` and `turingpi_talos_cluster` resources to the new [terraform-turingpi-modules](https://github.com/freed-dev-llc/terraform-turingpi-modules) repository.
 
 ## Why Migrate?
 
@@ -93,7 +93,7 @@ resource "turingpi_talos_cluster" "cluster" {
 ```hcl
 # Deploy Talos cluster using native provider
 module "cluster" {
-  source = "jfreed-dev/talos-cluster/turingpi"
+  source = "freed-dev-llc/talos-cluster/turingpi"
 
   cluster_name     = "my-cluster"
   cluster_endpoint = "https://192.168.1.101:6443"
@@ -123,7 +123,7 @@ provider "kubectl" {
 
 # Deploy MetalLB separately
 module "metallb" {
-  source     = "jfreed-dev/metallb/kubernetes"
+  source     = "freed-dev-llc/metallb/kubernetes"
   depends_on = [module.cluster]
 
   ip_range = "192.168.1.200-192.168.1.220"
@@ -131,7 +131,7 @@ module "metallb" {
 
 # Deploy Ingress-NGINX separately
 module "ingress" {
-  source          = "jfreed-dev/ingress-nginx/kubernetes"
+  source          = "freed-dev-llc/ingress-nginx/kubernetes"
   depends_on      = [module.metallb]
 
   loadbalancer_ip = "192.168.1.200"
@@ -233,5 +233,5 @@ provider "kubectl" {
 
 ## Questions?
 
-- Open an issue: https://github.com/jfreed-dev/terraform-turingpi-modules/issues
-- Review examples: https://github.com/jfreed-dev/terraform-turingpi-modules/tree/main/examples
+- Open an issue: https://github.com/freed-dev-llc/terraform-turingpi-modules/issues
+- Review examples: https://github.com/freed-dev-llc/terraform-turingpi-modules/tree/main/examples

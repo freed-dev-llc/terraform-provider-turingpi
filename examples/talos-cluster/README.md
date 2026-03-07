@@ -150,7 +150,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [turingpi_talos_cluster.cluster](https://registry.terraform.io/providers/jfreed-dev/turingpi/latest/docs/resources/talos_cluster) | resource |
+| [turingpi_talos_cluster.cluster](https://registry.terraform.io/providers/freed-dev-llc/turingpi/latest/docs/resources/talos_cluster) | resource |
 
 ## Inputs
 
