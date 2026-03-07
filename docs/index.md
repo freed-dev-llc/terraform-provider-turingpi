@@ -38,7 +38,7 @@ provider "turingpi" {
 
 resource "turingpi_power" "node1" {
   node  = 1
-  state = true
+  state = "on"
 }
 ```
 

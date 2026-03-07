@@ -398,6 +398,7 @@ sequenceDiagram
 | `TURINGPI_USERNAME` | BMC username | - |
 | `TURINGPI_PASSWORD` | BMC password | - |
 | `TURINGPI_ENDPOINT` | BMC URL | `https://turingpi.local` |
+| `TURINGPI_INSECURE` | Skip TLS verification | `false` |
 
 ---
 
@@ -405,17 +406,42 @@ sequenceDiagram
 
 ```
 terraform-provider-turingpi/
-├── main.go                 # Plugin entry point
+├── main.go                              # Plugin entry point
 ├── provider/
-│   ├── provider.go         # Provider schema and config
-│   ├── auth.go             # Authentication logic
-│   ├── helpers.go          # Shared API helpers
-│   ├── resource_power.go   # Power control resource
-│   ├── resource_flash.go   # Firmware flash resource
-│   └── resource_node.go    # Combined provisioning resource
+│   ├── provider.go                      # Provider schema and config
+│   ├── auth.go                          # Authentication logic
+│   ├── helpers.go                       # Shared API helpers
+│   ├── cluster_helpers.go               # Cluster provisioning utilities
+│   ├── ssh_client.go                    # SSH connection management
+│   ├── helm_client.go                   # Helm chart deployment
+│   ├── k8s_client.go                    # Kubernetes manifest client
+│   ├── kubeconfig.go                    # Kubeconfig utilities
+│   ├── k3s_provisioner.go              # K3s installation logic
+│   ├── talos_provisioner.go            # Talos provisioning via talosctl
+│   ├── data_source_about.go            # BMC version info
+│   ├── data_source_info.go             # BMC info (version, network, storage)
+│   ├── data_source_power.go            # Node power status
+│   ├── data_source_sdcard.go           # SD card storage info
+│   ├── data_source_uart.go             # UART serial output
+│   ├── data_source_usb.go             # USB routing config
+│   ├── resource_bmc_firmware.go        # BMC firmware upgrade
+│   ├── resource_bmc_reboot.go          # BMC reboot
+│   ├── resource_bmc_reload.go          # BMC daemon reload
+│   ├── resource_clear_usb_boot.go      # Clear USB boot status
+│   ├── resource_flash.go               # Firmware flash
+│   ├── resource_k3s_cluster.go         # K3s cluster (deprecated)
+│   ├── resource_network_reset.go       # Network switch reset
+│   ├── resource_node.go                # Combined node management
+│   ├── resource_node_to_msd.go         # USB Mass Storage mode
+│   ├── resource_power.go               # Node power control
+│   ├── resource_talos_cluster.go       # Talos cluster (deprecated)
+│   ├── resource_uart.go                # UART write
+│   ├── resource_usb.go                 # USB routing
+│   └── resource_usb_boot.go            # USB boot mode
 ├── docs/
-│   ├── index.md            # Registry documentation
-│   └── resources/          # Resource documentation
-├── examples/               # Usage examples
-└── testing/                # Test configurations
+│   ├── index.md                         # Registry documentation
+│   ├── data-sources/                    # Data source documentation
+│   └── resources/                       # Resource documentation
+├── examples/                            # Usage examples
+└── .goreleaser.yml                      # Release configuration
 ```

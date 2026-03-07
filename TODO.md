@@ -2,7 +2,7 @@
 
 This file tracks planned features and implementation tasks for the Terraform Turing Pi provider.
 
-## Current Release: v1.3.2
+## Current Release: v1.4.0
 
 ### Recently Completed
 - [x] Updated all Go modules to latest versions

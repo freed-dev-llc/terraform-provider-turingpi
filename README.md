@@ -72,7 +72,7 @@ terraform {
   required_providers {
     turingpi = {
       source  = "freed-dev-llc/turingpi"
-      version = "~> 1.3.8"
+      version = "~> 1.4.0"
     }
   }
 }
@@ -361,7 +361,7 @@ See the [examples](./examples) directory for complete configurations:
 
 ## Development
 
-Requires [Go 1.23+](https://go.dev/).
+Requires [Go 1.25+](https://go.dev/).
 
 ```bash
 # Clone and build

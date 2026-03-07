@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated all GitHub URLs, Terraform Registry sources, and documentation references
 - Updated Go module path to `github.com/freed-dev-llc/turingpi-terraform-provider`
 
+### Fixed
+
+- Include `manifest.json` in SHA256SUMS checksum for Terraform Registry compatibility
+
 ## [1.3.10] - 2026-01-25
 
 ### Fixed
