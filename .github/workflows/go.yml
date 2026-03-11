@@ -13,9 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Pin to SHA for supply chain security
-      # See: https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions
-      - uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v4
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v5
@@ -47,7 +45,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v4
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v5
