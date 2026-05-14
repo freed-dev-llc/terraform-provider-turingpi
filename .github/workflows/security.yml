@@ -16,7 +16,7 @@ permissions:
 jobs:
   # Verify commit signatures on PRs
   verify-signatures:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
 
   # Dependency review for PRs
   dependency-review:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
