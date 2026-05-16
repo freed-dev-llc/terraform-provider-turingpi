@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   terraform-docs:
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
         with:
