@@ -56,3 +56,68 @@ jobs:
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v6
         with:
           version: latest
+
+  cli-smoketest:
+    # Loads the dev-built provider binary under both terraform and tofu
+    # CLIs and runs `init -input=false` + `validate` against
+    # test/cli-smoke/. Catches provider-loading regressions in either
+    # tool (manifest schema, plugin protocol handshake).
+    runs-on: [self-hosted, linux]
+    strategy:
+      fail-fast: false
+      matrix:
+        cli:
+          - name: terraform
+            version: "1.15.3"
+            rc_file: .terraformrc
+          - name: tofu
+            version: "1.12.0"
+            rc_file: .tofurc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: Build provider binary
+        run: |
+          mkdir -p "$RUNNER_TEMP/provider-bin"
+          go build -o "$RUNNER_TEMP/provider-bin/terraform-provider-turingpi" .
+
+      - name: Setup terraform
+        if: matrix.cli.name == 'terraform'
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ matrix.cli.version }}
+          terraform_wrapper: false
+
+      - name: Setup opentofu
+        if: matrix.cli.name == 'tofu'
+        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+        with:
+          tofu_version: ${{ matrix.cli.version }}
+          tofu_wrapper: false
+
+      - name: Write dev_overrides CLI config
+        run: |
+          cat > "$HOME/${{ matrix.cli.rc_file }}" << EOF
+          provider_installation {
+            dev_overrides {
+              "freed-dev-llc/turingpi" = "$RUNNER_TEMP/provider-bin"
+            }
+            direct {}
+          }
+          EOF
+
+      - name: ${{ matrix.cli.name }} version
+        run: ${{ matrix.cli.name }} version
+
+      - name: ${{ matrix.cli.name }} init
+        working-directory: test/cli-smoke
+        run: ${{ matrix.cli.name }} init -input=false
+
+      - name: ${{ matrix.cli.name }} validate
+        working-directory: test/cli-smoke
+        run: ${{ matrix.cli.name }} validate
