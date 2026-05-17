@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-05-17
+
 ### Fixed
 - **`turingpi_flash` upload failure on older BMC firmware** (fixes #46): the previous `io.Pipe` + multipart implementation forced Go's HTTP client to send the upload with `Transfer-Encoding: chunked`, which older BMC firmware (e.g. v2.2.0) rejects with a closed connection
   - Upload now streams `multipart/form-data` with a pre-computed `Content-Length` instead of chunked encoding (matches what the official `tpi` CLI sends)
   - BMC errors are now surfaced with the real HTTP status and response body (e.g. `firmware upload failed with status 500: Multipart form invalid`) instead of the misleading `io: read/write on closed pipe` symptom
 
+### Changed
+- Internal: migrate provider/resource handlers from deprecated `terraform-plugin-sdk/v2` callbacks (`ConfigureFunc`, `Create`/`Read`/`Update`/`Delete`) to their `*Context` variants. No public API change.
+
 ### Security
 - Bump `helm.sh/helm/v3` from 3.20.0 to 3.20.2 to address CVE-2026-35206 / GHSA-hr2v-4r36-88hr (chart extraction directory collapse via `Chart.yaml` name dot-segment). The vulnerable code path (`helm pull --untar`) is not used by this provider, but the bump removes the alert.
+- Bump `golang.org/x/crypto` from 0.48.0 to 0.49.0.
+- Bump `google.golang.org/grpc` (transitive, via dependabot).
+- Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.38.2 to 2.40.1.
 
 ## [1.4.0] - 2026-03-07
 
