@@ -50,10 +50,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@398ad549bbf1a51dc978fd966169f660c59774de # v2.23.0
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v5
         with:
-          args: '-no-fail -fmt sarif -out results.sarif ./...'
+          go-version-file: "go.mod"
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.23.0
+
+      - name: Run Gosec Security Scanner
+        run: gosec -no-fail -fmt sarif -out results.sarif ./...
 
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@0d579ffd059c29b07949a3cce3983f0780820c98 # v4.32.6
