@@ -55,7 +55,9 @@ jobs:
           go-version-file: "go.mod"
 
       - name: Install gosec
-        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.23.0
+        # Pinned to v2.22.11; v2.23.0 emits null relationships for G703/G704
+        # which CodeQL's SARIF validator rejects on upload.
+        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.22.11
 
       - name: Run Gosec Security Scanner
         run: gosec -no-fail -fmt sarif -out results.sarif ./...
