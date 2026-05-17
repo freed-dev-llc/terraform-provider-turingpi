@@ -27,13 +27,21 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
-      - name: Generate docs for examples
-        uses: terraform-docs/gh-actions@v1
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v5
         with:
-          working-dir: examples/basic,examples/flash-firmware,examples/full-provisioning,examples/talos-cluster,examples/k3s-cluster
-          output-file: README.md
-          output-method: inject
-          git-push: false  # Don't auto-push; branch protection requires signed commits via PRs
+          go-version-file: "go.mod"
+
+      - name: Install terraform-docs
+        # Pinned to v0.20.0 — the version shipped by terraform-docs/gh-actions@v1.4.1.
+        # The Docker action fails on the containerized self-hosted runner because
+        # workspace bind-mounts don't resolve in the host docker daemon.
+        run: go install github.com/terraform-docs/terraform-docs@v0.20.0
+
+      - name: Generate docs for examples
+        run: |
+          for dir in examples/basic examples/flash-firmware examples/full-provisioning examples/talos-cluster examples/k3s-cluster; do
+            terraform-docs --output-file README.md --output-mode inject "$dir"
+          done
 
       - name: Check for uncommitted changes
         run: |
