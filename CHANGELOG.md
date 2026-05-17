@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`turingpi_flash` upload failure on older BMC firmware** (fixes #46): the previous `io.Pipe` + multipart implementation forced Go's HTTP client to send the upload with `Transfer-Encoding: chunked`, which older BMC firmware (e.g. v2.2.0) rejects with a closed connection
+  - Upload now streams `multipart/form-data` with a pre-computed `Content-Length` instead of chunked encoding (matches what the official `tpi` CLI sends)
+  - BMC errors are now surfaced with the real HTTP status and response body (e.g. `firmware upload failed with status 500: Multipart form invalid`) instead of the misleading `io: read/write on closed pipe` symptom
+
 ## [1.4.0] - 2026-03-07
 
 ### Changed
