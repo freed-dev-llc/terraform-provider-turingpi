@@ -1,12 +1,14 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -162,63 +164,10 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 
 	fmt.Printf("Got upload handle: %s\n", handleStr)
 
-	// Step 3: Upload the firmware file using multipart form
-	uploadURL := fmt.Sprintf("%s/api/bmc/upload/%s", config.Endpoint, handleStr)
-
-	// Create a pipe for streaming the multipart form data
-	pr, pw := io.Pipe()
-	writer := multipart.NewWriter(pw)
-
-	// Start a goroutine to write the multipart form data
-	errChan := make(chan error, 1)
-	go func() {
-		defer func() { _ = pw.Close() }()
-		defer func() { _ = writer.Close() }()
-
-		part, err := writer.CreateFormFile("file", firmwarePath)
-		if err != nil {
-			errChan <- fmt.Errorf("failed to create form file: %w", err)
-			return
-		}
-
-		// Re-open the file for reading (we need to read it again)
-		uploadFile, err := os.Open(firmwarePath)
-		if err != nil {
-			errChan <- fmt.Errorf("failed to open firmware file for upload: %w", err)
-			return
-		}
-		defer func() { _ = uploadFile.Close() }()
-
-		if _, err := io.Copy(part, uploadFile); err != nil {
-			errChan <- fmt.Errorf("failed to copy firmware data: %w", err)
-			return
-		}
-
-		errChan <- nil
-	}()
-
-	uploadReq, err := http.NewRequest("POST", uploadURL, pr)
-	if err != nil {
-		return fmt.Errorf("failed to create upload request: %w", err)
-	}
-	uploadReq.Header.Set("Authorization", "Bearer "+config.Token)
-	uploadReq.Header.Set("Content-Type", writer.FormDataContentType())
-
+	// Step 3: Upload the firmware file as a raw streaming POST.
 	fmt.Printf("Uploading firmware to BMC (%d bytes)...\n", fileSize)
-	uploadResp, err := HTTPClient.Do(uploadReq)
-	if err != nil {
-		return fmt.Errorf("firmware upload failed: %w", err)
-	}
-	defer func() { _ = uploadResp.Body.Close() }()
-
-	// Check for errors from the goroutine
-	if uploadErr := <-errChan; uploadErr != nil {
-		return uploadErr
-	}
-
-	if uploadResp.StatusCode != http.StatusOK && uploadResp.StatusCode != http.StatusNoContent {
-		body, _ := io.ReadAll(uploadResp.Body)
-		return fmt.Errorf("firmware upload failed with status %d: %s", uploadResp.StatusCode, string(body))
+	if err := uploadFlashStream(config.Endpoint, config.Token, handleStr, file, fileSize); err != nil {
+		return err
 	}
 
 	fmt.Printf("Upload complete, waiting for flash to finish...\n")
@@ -264,6 +213,65 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
+}
+
+// uploadFlashStream uploads firmware bytes to the BMC's streaming-flash
+// endpoint. The BMC requires a multipart/form-data body with a single "file"
+// part. To avoid chunked transfer encoding -- which older BMC firmware
+// rejects (see issue #46) -- the multipart prologue and epilogue are
+// pre-built so the request can be sent with an explicit Content-Length and
+// the file body streamed in between.
+func uploadFlashStream(endpoint, token, handle string, file *os.File, fileSize int64) error {
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("failed to seek firmware file: %w", err)
+	}
+
+	var prologue bytes.Buffer
+	writer := multipart.NewWriter(&prologue)
+	if _, err := writer.CreateFormFile("file", filepath.Base(file.Name())); err != nil {
+		return fmt.Errorf("failed to build multipart prologue: %w", err)
+	}
+	// CreateFormFile wrote the boundary line and part headers. Snapshot what's
+	// in the buffer as the prologue, then build the epilogue from a second
+	// writer that emits only the closing boundary.
+	prologueBytes := append([]byte(nil), prologue.Bytes()...)
+
+	var epilogue bytes.Buffer
+	closer := multipart.NewWriter(&epilogue)
+	if err := closer.SetBoundary(writer.Boundary()); err != nil {
+		return fmt.Errorf("failed to set multipart boundary: %w", err)
+	}
+	// Close emits the trailing "\r\n--BOUNDARY--\r\n" without the leading part
+	// header that a fresh writer would otherwise add, because nothing was
+	// written to this writer.
+	if err := closer.Close(); err != nil {
+		return fmt.Errorf("failed to build multipart epilogue: %w", err)
+	}
+	epilogueBytes := epilogue.Bytes()
+
+	body := io.MultiReader(bytes.NewReader(prologueBytes), file, bytes.NewReader(epilogueBytes))
+
+	uploadURL := fmt.Sprintf("%s/api/bmc/upload/%s", endpoint, handle)
+	req, err := http.NewRequest("POST", uploadURL, body)
+	if err != nil {
+		return fmt.Errorf("failed to create upload request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.ContentLength = int64(len(prologueBytes)) + fileSize + int64(len(epilogueBytes))
+
+	resp, err := HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("firmware upload failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("firmware upload failed with status %d: %s", resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+
+	return nil
 }
 
 func getFlashStatus(endpoint, token string) (*flashStatusResponse, error) {
