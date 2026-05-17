@@ -31,10 +31,14 @@ jobs:
       current_version: ${{ steps.check.outputs.current_version }}
     steps:
       - name: Install rclone
+        # Use the official installer to pull a current rclone (Ubuntu 24.04
+        # apt ships v1.60.1 which has R2 multipart upload bugs that surface
+        # as `BadRequest` against bucket-scoped tokens).
         run: |
-          if ! command -v rclone >/dev/null 2>&1; then
-            sudo apt-get update && sudo apt-get install -y rclone
+          if ! rclone version 2>/dev/null | head -1 | grep -qE 'v1\.(7[0-9]|[89][0-9])'; then
+            curl -fsSL https://rclone.org/install.sh | sudo bash
           fi
+          rclone version | head -1
 
       - name: Configure rclone for Cloudflare R2
         run: |
@@ -86,9 +90,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
+        # rclone is installed from rclone.org because the apt version
+        # (v1.60.1 on Ubuntu 24.04) has R2 multipart upload bugs.
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq rclone xz-utils
+          sudo apt-get install -y jq xz-utils
+          if ! rclone version 2>/dev/null | head -1 | grep -qE 'v1\.(7[0-9]|[89][0-9])'; then
+            curl -fsSL https://rclone.org/install.sh | sudo bash
+          fi
+          rclone version | head -1
 
       - name: Verify schematic configuration
         id: schematic
