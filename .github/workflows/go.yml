@@ -114,10 +114,10 @@ jobs:
       - name: ${{ matrix.cli.name }} version
         run: ${{ matrix.cli.name }} version
 
-      - name: ${{ matrix.cli.name }} init
-        working-directory: test/cli-smoke
-        run: ${{ matrix.cli.name }} init -input=false
-
+      # Don't run `init` — with dev_overrides in effect, the CLI doesn't
+      # need (and OpenTofu actively rejects) a registry lookup. validate
+      # alone loads the provider from the override path and exercises
+      # the full schema-load + config-validation path.
       - name: ${{ matrix.cli.name }} validate
         working-directory: test/cli-smoke
         run: ${{ matrix.cli.name }} validate
