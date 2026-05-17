@@ -47,6 +47,9 @@ jobs:
           secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
           endpoint = ${{ secrets.R2_ENDPOINT }}
           region = auto
+          # Bucket-scoped tokens can't issue CreateBucket, which rclone
+          # otherwise calls as a preflight before uploads.
+          no_check_bucket = true
           EOF
 
       - name: Get latest Talos release
@@ -168,6 +171,9 @@ jobs:
           secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
           endpoint = ${{ secrets.R2_ENDPOINT }}
           region = auto
+          # Bucket-scoped tokens can't issue CreateBucket, which rclone
+          # otherwise calls as a preflight before uploads.
+          no_check_bucket = true
           EOF
 
       - name: Upload to Cloudflare R2
