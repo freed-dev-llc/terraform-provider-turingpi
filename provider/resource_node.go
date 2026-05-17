@@ -1,17 +1,19 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceNode() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNodeProvision,
-		Read:   resourceNodeStatus,
-		Update: resourceNodeProvision,
-		Delete: resourceNodeDelete,
+		CreateContext: resourceNodeProvision,
+		ReadContext:   resourceNodeStatus,
+		UpdateContext: resourceNodeProvision,
+		DeleteContext: resourceNodeDelete,
 		Schema: map[string]*schema.Schema{
 			"node": {
 				Type:        schema.TypeInt,
@@ -51,7 +53,7 @@ func resourceNode() *schema.Resource {
 	}
 }
 
-func resourceNodeProvision(d *schema.ResourceData, meta interface{}) error {
+func resourceNodeProvision(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*ProviderConfig)
 	node := d.Get("node").(int)
 	firmware := d.Get("firmware_file").(string)
@@ -77,10 +79,10 @@ func resourceNodeProvision(d *schema.ResourceData, meta interface{}) error {
 		fmt.Printf("Checking boot status for node %d (pattern: %q)...\n", node, bootCheckPattern)
 		success, err := checkBootStatus(config.Endpoint, node, timeout, config.Token, bootCheckPattern)
 		if err != nil {
-			return fmt.Errorf("boot status check failed for node %d: %v", node, err)
+			return diag.FromErr(fmt.Errorf("boot status check failed for node %d: %v", node, err))
 		}
 		if !success {
-			return fmt.Errorf("node %d did not boot successfully", node)
+			return diag.Errorf("node %d did not boot successfully", node)
 		}
 	}
 
@@ -88,17 +90,17 @@ func resourceNodeProvision(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceNodeStatus(d *schema.ResourceData, meta interface{}) error {
+func resourceNodeStatus(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	node := d.Get("node").(int)
 	currentPower := checkPowerStatus(node)
 
 	if err := d.Set("power_state", currentPower); err != nil {
-		return fmt.Errorf("failed to set power_state: %v", err)
+		return diag.FromErr(fmt.Errorf("failed to set power_state: %v", err))
 	}
 	return nil
 }
 
-func resourceNodeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNodeDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	node := d.Get("node").(int)
 	turnOffNode(node)
 	return nil

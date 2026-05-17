@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -111,24 +112,20 @@ func TestResourceNode_DefaultValues(t *testing.T) {
 func TestResourceNode_HasCRUDFunctions(t *testing.T) {
 	r := resourceNode()
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Create field
-	if r.Create == nil {
-		t.Error("resource should have Create function")
+	if r.CreateContext == nil {
+		t.Error("resource should have CreateContext function")
 	}
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Read field
-	if r.Read == nil {
-		t.Error("resource should have Read function")
+	if r.ReadContext == nil {
+		t.Error("resource should have ReadContext function")
 	}
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Update field
-	if r.Update == nil {
-		t.Error("resource should have Update function")
+	if r.UpdateContext == nil {
+		t.Error("resource should have UpdateContext function")
 	}
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Delete field
-	if r.Delete == nil {
-		t.Error("resource should have Delete function")
+	if r.DeleteContext == nil {
+		t.Error("resource should have DeleteContext function")
 	}
 }
 
@@ -145,9 +142,9 @@ func TestResourceNodeProvision_SetsId(t *testing.T) {
 		Endpoint: "https://test.local",
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 
 	expectedId := "node-1"
@@ -181,9 +178,9 @@ func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
 			_ = d.Set("power_state", "on")
 			_ = d.Set("boot_check", false)
 
-			err := resourceNodeProvision(d, config)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			diags := resourceNodeProvision(context.Background(), d, config)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary)
 			}
 
 			if d.Id() != tc.expectedId {
@@ -206,9 +203,9 @@ func TestResourceNodeProvision_PowerStateOn(t *testing.T) {
 		Endpoint: "https://test.local",
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -225,9 +222,9 @@ func TestResourceNodeProvision_PowerStateOff(t *testing.T) {
 		Endpoint: "https://test.local",
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -245,9 +242,9 @@ func TestResourceNodeProvision_WithFirmware(t *testing.T) {
 		Endpoint: "https://test.local",
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -273,9 +270,9 @@ func TestResourceNodeProvision_WithBootCheck(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -301,8 +298,8 @@ func TestResourceNodeProvision_BootCheckTimeout(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err == nil {
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if !diags.HasError() {
 		t.Fatal("expected error for boot check timeout, got nil")
 	}
 }
@@ -329,9 +326,9 @@ func TestResourceNodeProvision_CustomBootCheckPattern(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	err := resourceNodeProvision(d, config)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeProvision(context.Background(), d, config)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -342,9 +339,9 @@ func TestResourceNodeStatus_SetsPowerState(t *testing.T) {
 	_ = d.Set("node", 1)
 	d.SetId("node-1")
 
-	err := resourceNodeStatus(d, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeStatus(context.Background(), d, nil)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 
 	// checkPowerStatus currently returns "off"
@@ -361,9 +358,9 @@ func TestResourceNodeDelete_TurnsOffNode(t *testing.T) {
 	_ = d.Set("node", 1)
 	d.SetId("node-1")
 
-	err := resourceNodeDelete(d, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceNodeDelete(context.Background(), d, nil)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -378,9 +375,9 @@ func TestResourceNodeDelete_DifferentNodes(t *testing.T) {
 			_ = d.Set("node", node)
 			d.SetId("node-" + string(rune('0'+node)))
 
-			err := resourceNodeDelete(d, nil)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
+			diags := resourceNodeDelete(context.Background(), d, nil)
+			if diags.HasError() {
+				t.Fatalf("unexpected error: %s", diags[0].Summary)
 			}
 		})
 	}
