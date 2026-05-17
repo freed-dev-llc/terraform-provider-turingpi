@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Upload now streams `multipart/form-data` with a pre-computed `Content-Length` instead of chunked encoding (matches what the official `tpi` CLI sends)
   - BMC errors are now surfaced with the real HTTP status and response body (e.g. `firmware upload failed with status 500: Multipart form invalid`) instead of the misleading `io: read/write on closed pipe` symptom
 
+### Security
+- Bump `helm.sh/helm/v3` from 3.20.0 to 3.20.2 to address CVE-2026-35206 / GHSA-hr2v-4r36-88hr (chart extraction directory collapse via `Chart.yaml` name dot-segment). The vulnerable code path (`helm pull --untar`) is not used by this provider, but the bump removes the alert.
+
 ## [1.4.0] - 2026-03-07
 
 ### Changed
