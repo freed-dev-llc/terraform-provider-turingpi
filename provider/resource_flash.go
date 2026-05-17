@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,16 +13,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceFlash() *schema.Resource {
 	return &schema.Resource{
-		Description: "Flashes firmware to a Turing Pi compute node. The node must be powered off before flashing.",
-		Create:      resourceFlashCreate,
-		Read:        resourceFlashRead,
-		Delete:      resourceFlashDelete,
+		Description:   "Flashes firmware to a Turing Pi compute node. The node must be powered off before flashing.",
+		CreateContext: resourceFlashCreate,
+		ReadContext:   resourceFlashRead,
+		DeleteContext: resourceFlashDelete,
 		Schema: map[string]*schema.Schema{
 			"node": {
 				Type:             schema.TypeInt,
@@ -93,7 +95,7 @@ func (f *flashStatusResponse) isTransferring() (inProgress bool, bytesWritten, t
 	return true, 0, 0
 }
 
-func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFlashCreate(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*ProviderConfig)
 	node := d.Get("node").(int)
 	firmwarePath := d.Get("firmware_file").(string)
@@ -101,13 +103,13 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 	// Open the firmware file
 	file, err := os.Open(firmwarePath)
 	if err != nil {
-		return fmt.Errorf("failed to open firmware file: %w", err)
+		return diag.FromErr(fmt.Errorf("failed to open firmware file: %w", err))
 	}
 	defer func() { _ = file.Close() }()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to stat firmware file: %w", err)
+		return diag.FromErr(fmt.Errorf("failed to stat firmware file: %w", err))
 	}
 	fileSize := fileInfo.Size()
 
@@ -115,7 +117,7 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Step 1: Power off the node before flashing
 	if err := setNodePower(config.Endpoint, config.Token, node, false); err != nil {
-		return fmt.Errorf("failed to power off node before flash: %w", err)
+		return diag.FromErr(fmt.Errorf("failed to power off node before flash: %w", err))
 	}
 	time.Sleep(2 * time.Second) // Wait for node to power off
 
@@ -127,28 +129,28 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create flash request: %w", err)
+		return diag.FromErr(fmt.Errorf("failed to create flash request: %w", err))
 	}
 	req.Header.Set("Authorization", "Bearer "+config.Token)
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("flash initiation failed: %w", err)
+		return diag.FromErr(fmt.Errorf("flash initiation failed: %w", err))
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("flash initiation failed with status %d: %s", resp.StatusCode, string(body))
+		return diag.Errorf("flash initiation failed with status %d: %s", resp.StatusCode, string(body))
 	}
 
 	var flashResp flashResponse
 	if err := json.NewDecoder(resp.Body).Decode(&flashResp); err != nil {
-		return fmt.Errorf("failed to decode flash response: %w", err)
+		return diag.FromErr(fmt.Errorf("failed to decode flash response: %w", err))
 	}
 
 	if flashResp.Handle == nil {
-		return fmt.Errorf("no upload handle returned from BMC")
+		return diag.Errorf("no upload handle returned from BMC")
 	}
 
 	// Handle can be string or number
@@ -167,7 +169,7 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 	// Step 3: Upload the firmware file as a raw streaming POST.
 	fmt.Printf("Uploading firmware to BMC (%d bytes)...\n", fileSize)
 	if err := uploadFlashStream(config.Endpoint, config.Token, handleStr, file, fileSize); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	fmt.Printf("Upload complete, waiting for flash to finish...\n")
@@ -180,7 +182,7 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 	for {
 		select {
 		case <-timeout:
-			return fmt.Errorf("flash operation timed out")
+			return diag.Errorf("flash operation timed out")
 		case <-ticker.C:
 			status, err := getFlashStatus(config.Endpoint, config.Token)
 			if err != nil {
@@ -189,7 +191,7 @@ func resourceFlashCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if status.Error != nil {
-				return fmt.Errorf("flash failed: %s", *status.Error)
+				return diag.Errorf("flash failed: %s", *status.Error)
 			}
 
 			if status.Done != nil {
@@ -302,7 +304,7 @@ func getFlashStatus(endpoint, token string) (*flashStatusResponse, error) {
 	return &status, nil
 }
 
-func resourceFlashRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFlashRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Flash is a one-time operation - once completed, we just maintain state
 	// The resource exists if it was successfully flashed
 	id := d.Id()
@@ -312,7 +314,7 @@ func resourceFlashRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceFlashDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFlashDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Flash cannot be "undone" - we just remove from state
 	// The node retains its flashed firmware
 	fmt.Printf("Removing flash resource from state (firmware remains on node)\n")

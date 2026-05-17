@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -83,25 +84,21 @@ func TestResourceFlash_ForceNewFields(t *testing.T) {
 func TestResourceFlash_HasCRUDFunctions(t *testing.T) {
 	r := resourceFlash()
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Create field
-	if r.Create == nil {
-		t.Error("resource should have Create function")
+	if r.CreateContext == nil {
+		t.Error("resource should have CreateContext function")
 	}
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Read field
-	if r.Read == nil {
-		t.Error("resource should have Read function")
+	if r.ReadContext == nil {
+		t.Error("resource should have ReadContext function")
 	}
 
 	// Flash resource should NOT have Update (uses ForceNew instead)
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Update field
-	if r.Update != nil {
-		t.Error("resource should NOT have Update function (uses ForceNew)")
+	if r.UpdateContext != nil {
+		t.Error("resource should NOT have UpdateContext function (uses ForceNew)")
 	}
 
-	//nolint:staticcheck // SA1019: intentionally testing deprecated Delete field
-	if r.Delete == nil {
-		t.Error("resource should have Delete function")
+	if r.DeleteContext == nil {
+		t.Error("resource should have DeleteContext function")
 	}
 }
 
@@ -117,12 +114,12 @@ func TestResourceFlashCreate_FileNotFound(t *testing.T) {
 		Token:    "test-token",
 	}
 
-	err := resourceFlashCreate(d, config)
-	if err == nil {
+	diags := resourceFlashCreate(context.Background(), d, config)
+	if !diags.HasError() {
 		t.Fatal("expected error for non-existent file")
 	}
-	if !strings.Contains(err.Error(), "failed to open firmware file") {
-		t.Errorf("expected file open error, got: %s", err)
+	if !strings.Contains(diags[0].Summary, "failed to open firmware file") {
+		t.Errorf("expected file open error, got: %s", diags[0].Summary)
 	}
 }
 
@@ -288,9 +285,9 @@ func TestResourceFlashRead_DoesNotError(t *testing.T) {
 	d := r.TestResourceData()
 	d.SetId("node-1")
 
-	err := resourceFlashRead(d, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceFlashRead(context.Background(), d, nil)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
@@ -299,9 +296,9 @@ func TestResourceFlashDelete_DoesNotError(t *testing.T) {
 	d := r.TestResourceData()
 	d.SetId("node-1")
 
-	err := resourceFlashDelete(d, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	diags := resourceFlashDelete(context.Background(), d, nil)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 

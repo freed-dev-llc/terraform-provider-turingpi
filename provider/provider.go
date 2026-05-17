@@ -1,9 +1,11 @@
 package provider
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -71,11 +73,11 @@ func Provider() *schema.Provider {
 			"turingpi_sdcard": dataSourceSDCard(),
 			"turingpi_about":  dataSourceAbout(),
 		},
-		ConfigureFunc: configureProvider,
+		ConfigureContextFunc: configureProvider,
 	}
 }
 
-func configureProvider(d *schema.ResourceData) (interface{}, error) {
+func configureProvider(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	endpoint := d.Get("endpoint").(string)
@@ -92,7 +94,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 	token, err := authenticate(endpoint, username, password)
 	if err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 
 	return &ProviderConfig{
