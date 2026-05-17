@@ -1,8 +1,14 @@
 package provider
 
 import (
+	"bytes"
+	"io"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -117,6 +123,113 @@ func TestResourceFlashCreate_FileNotFound(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "failed to open firmware file") {
 		t.Errorf("expected file open error, got: %s", err)
+	}
+}
+
+// writeTempFirmware writes payload to a temp file and returns an open *os.File
+// positioned at offset 0 along with its size. The caller is responsible for
+// closing the file.
+func writeTempFirmware(t *testing.T, payload []byte) (*os.File, int64) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "firmware.img")
+	if err := os.WriteFile(path, payload, 0o600); err != nil {
+		t.Fatalf("write temp firmware: %v", err)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open temp firmware: %v", err)
+	}
+	t.Cleanup(func() { _ = f.Close() })
+	return f, int64(len(payload))
+}
+
+// TestUploadFlashStream_NoChunkedEncoding ensures the upload request carries
+// an explicit Content-Length and is not sent with Transfer-Encoding: chunked.
+// The BMC accepts multipart/form-data with a single "file" part, but older
+// firmware rejects chunked bodies (root cause of issue #46). Also round-trips
+// the multipart body to confirm the BMC sees the expected structure.
+func TestUploadFlashStream_NoChunkedEncoding(t *testing.T) {
+	payload := []byte("firmware-bytes-payload")
+
+	var gotContentLength int64
+	var gotTransferEncoding []string
+	var gotContentType string
+	var gotBody []byte
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotContentLength = r.ContentLength
+		gotTransferEncoding = r.TransferEncoding
+		gotContentType = r.Header.Get("Content-Type")
+		body, _ := io.ReadAll(r.Body)
+		gotBody = body
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	file, size := writeTempFirmware(t, payload)
+
+	if err := uploadFlashStream(server.URL, "test-token", "handle-123", file, size); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(gotTransferEncoding) != 0 {
+		t.Errorf("expected no Transfer-Encoding, got %v", gotTransferEncoding)
+	}
+	if gotContentLength <= 0 {
+		t.Errorf("expected positive Content-Length, got %d", gotContentLength)
+	}
+	if gotContentLength != int64(len(gotBody)) {
+		t.Errorf("Content-Length=%d does not match received body length=%d", gotContentLength, len(gotBody))
+	}
+	if !strings.HasPrefix(gotContentType, "multipart/form-data") {
+		t.Errorf("expected multipart/form-data Content-Type, got %q", gotContentType)
+	}
+
+	_, params, err := mime.ParseMediaType(gotContentType)
+	if err != nil {
+		t.Fatalf("parse Content-Type: %v", err)
+	}
+	mr := multipart.NewReader(bytes.NewReader(gotBody), params["boundary"])
+	part, err := mr.NextPart()
+	if err != nil {
+		t.Fatalf("read multipart part: %v", err)
+	}
+	if part.FormName() != "file" {
+		t.Errorf("expected form field name=\"file\", got %q", part.FormName())
+	}
+	gotFile, _ := io.ReadAll(part)
+	if string(gotFile) != string(payload) {
+		t.Errorf("file part content mismatch: got %q want %q", gotFile, payload)
+	}
+	if _, err := mr.NextPart(); err != io.EOF {
+		t.Errorf("expected exactly one part, got more (err=%v)", err)
+	}
+}
+
+// TestUploadFlashStream_SurfacesBMCError verifies that when the BMC returns
+// a non-2xx status mid-upload, the error message contains the status code and
+// response body rather than the previous "io: read/write on closed pipe"
+// symptom that masked the real cause in issue #46.
+func TestUploadFlashStream_SurfacesBMCError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		_, _ = w.Write([]byte("payload too large"))
+	}))
+	defer server.Close()
+
+	file, size := writeTempFirmware(t, []byte("firmware"))
+
+	err := uploadFlashStream(server.URL, "test-token", "handle-123", file, size)
+	if err == nil {
+		t.Fatal("expected error from non-2xx BMC response")
+	}
+	if !strings.Contains(err.Error(), "413") {
+		t.Errorf("expected status code in error, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "payload too large") {
+		t.Errorf("expected BMC response body in error, got: %v", err)
+	}
+	if strings.Contains(err.Error(), "closed pipe") {
+		t.Errorf("error should not mention closed pipe, got: %v", err)
 	}
 }
 
