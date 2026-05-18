@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-05-18
+
+### Added
+- **`turingpi_flash`: new `firmware_url` field** (#67, refs #66 / #63). When set, the BMC pulls the firmware directly via HTTP(S); its `Done` signal then covers download + decompress + eMMC write end-to-end. This is the only code path that reliably reports completion on current BMC firmware. Mutually exclusive with `firmware_file` (`ExactlyOneOf`). Backward-compatible — configs setting `firmware_file` keep working.
+
+### Deprecated
+- **`turingpi_flash`: `firmware_file`** (#67, refs #63). The BMC reports `Done` as soon as the multipart upload finishes — *not* when the eMMC write completes — so `terraform apply` can succeed against a node whose image was never actually written. The field is kept for back-compat and now emits a `tflog.Warn` on use; prefer `firmware_url`. Tracker for the underlying fix: #66.
+
+### Removed
+- Delete dead `pkg/{ssh,talos,helm,k3s,kubeconfig}` tree (#65) — leftover from an unfinished refactor, no non-test importers. Closes a batch of stale gosec alerts as a side effect.
+
+### Changed
+- `provider/resource_flash.go`: extract `pollFlashUntilDone` and `buildURLFlashInit` so the streaming and URL paths share the wait loop and the URL-encoding logic is unit-testable.
+
+### Security
+- `provider/k8s_client.go`: tighten temp manifest file permissions `0644` → `0600` (#65). Manifests can carry secrets.
+- `provider/talos_provisioner.go`: tighten talos `configs/` directory permissions `0755` → `0750` (#65). Holds client certs.
+- Triage the rest of the open gosec / CodeQL alerts on this repo as `false positive` (G304 file inclusion on user-supplied paths is the resource contract; G204 kubectl is the API of `K8sClient.RunKubectl`) or `won't fix` (G402 `InsecureSkipVerify` gated on the user `insecure` flag, G106 `InsecureIgnoreHostKey` because the BMC has no stable host key). 23 → 0 open alerts.
+
+### CI
+- Add `cli-smoketest` matrix job exercising both `terraform` and `opentofu` against the built provider (#58).
+- Stop the smoketest from polluting `$HOME/.terraformrc` with `dev_overrides` on the persistent self-hosted runner (#61) — use `TF_CLI_CONFIG_FILE` pointed at `$RUNNER_TEMP`.
+- Add `paths-ignore: docs/**` to the secret-scanning workflow so doc-only PRs don't trigger it (#64).
+
+### Documentation
+- Refresh `TODO.md` for v1.4.1 (#59) and link to it from the README features section (#60).
+- Swap codecov badge for OpenTofu Registry badge (#62).
+- Update `docs/resources/flash.md` with the new `firmware_url` example and a prominent warning on `firmware_file` referencing #63.
+
 ## [1.4.1] - 2026-05-17
 
 ### Fixed
