@@ -77,9 +77,12 @@ func TestResourceFlash_RequiredFields(t *testing.T) {
 			t.Errorf("%s should declare ExactlyOneOf with 2 entries, got %v", f, exo)
 			continue
 		}
-		if !(exo[0] == "firmware_file" && exo[1] == "firmware_url") &&
-			!(exo[0] == "firmware_url" && exo[1] == "firmware_file") {
-			t.Errorf("%s ExactlyOneOf should be {firmware_file, firmware_url}, got %v", f, exo)
+		got := map[string]bool{}
+		for _, s := range exo {
+			got[s] = true
+		}
+		if !got["firmware_file"] || !got["firmware_url"] {
+			t.Errorf("%s ExactlyOneOf should contain firmware_file + firmware_url, got %v", f, exo)
 		}
 	}
 }
