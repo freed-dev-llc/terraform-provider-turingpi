@@ -27,6 +27,8 @@ A Terraform provider for managing Turing Pi's Baseboard Management Controller (B
 - **TLS Flexibility** - Skip certificate verification for self-signed or expired BMC certificates
 - **Environment Variables** - Configure provider via environment variables for CI/CD pipelines
 
+See [TODO.md](TODO.md) for planned features, upcoming milestones, and what shipped in each release.
+
 ## Terraform Modules
 
 For cluster deployment, we recommend using the composable [terraform-turingpi-modules](https://github.com/freed-dev-llc/terraform-turingpi-modules) repository:
