@@ -1,10 +1,10 @@
 # Terraform Provider for Turing Pi 2.5
 
 [![Terraform Registry](https://img.shields.io/badge/terraform-registry-blueviolet)](https://registry.terraform.io/providers/freed-dev-llc/turingpi)
+[![OpenTofu Registry](https://img.shields.io/badge/opentofu-registry-blue)](https://search.opentofu.org/provider/freed-dev-llc/turingpi/latest)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/freed-dev-llc/terraform-provider-turingpi)](https://go.dev/)
 [![Go](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/go.yml/badge.svg)](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/go.yml)
 [![Security](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/security.yml/badge.svg)](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/security.yml)
-[![codecov](https://codecov.io/gh/freed-dev-llc/terraform-provider-turingpi/graph/badge.svg)](https://codecov.io/gh/freed-dev-llc/terraform-provider-turingpi)
 [![Release](https://img.shields.io/github/v/release/freed-dev-llc/terraform-provider-turingpi)](https://github.com/freed-dev-llc/terraform-provider-turingpi/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/freed-dev-llc/terraform-provider-turingpi/total)](https://github.com/freed-dev-llc/terraform-provider-turingpi/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
