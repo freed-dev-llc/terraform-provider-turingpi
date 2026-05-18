@@ -11,7 +11,7 @@ Flashes firmware to a Turing Pi compute node. The node is powered off before fla
 
 ~> **Note:** Flashing firmware is a destructive operation. Ensure you have the correct firmware file for your compute module.
 
-!> **`firmware_file` is known broken on current BMC firmware** (issue [#63](https://github.com/freed-dev-llc/terraform-provider-turingpi/issues/63)). The BMC reports the flash as `Done` when the multipart upload finishes, **not** when the eMMC write completes — so `terraform apply` can succeed against a node whose new image was never actually written. Use `firmware_url` until [#66](https://github.com/freed-dev-llc/terraform-provider-turingpi/issues/66) lands a fix.
+!> **`firmware_file` is known broken on current BMC firmware** (issue [#63](https://github.com/freed-dev-llc/terraform-provider-turingpi/issues/63)). The BMC reports the flash as `Done` when the multipart upload finishes, **not** when the eMMC write completes — so `terraform apply` can succeed against a node whose new image was never actually written. Use `firmware_url`; the streaming path is being abandoned rather than fixed (#63 + [#66](https://github.com/freed-dev-llc/terraform-provider-turingpi/issues/66) closed as `not planned` 2026-05-18).
 
 ## Example Usage
 
