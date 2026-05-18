@@ -16,6 +16,7 @@ This document provides visual architecture documentation for the Turing Pi Terra
 ## System Overview
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TB
     subgraph "Terraform Workflow"
         TF[Terraform CLI]
@@ -64,6 +65,7 @@ graph TB
 ## Network Topology
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TB
     subgraph "Operator Workstation"
         TF[Terraform CLI]
@@ -130,6 +132,7 @@ graph TB
 ## Component Interaction
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph LR
     subgraph "Terraform Plugin SDK v2"
         Plugin[plugin.Serve]
@@ -191,6 +194,7 @@ graph LR
 ### turingpi_power Resource
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 stateDiagram-v2
     [*] --> Create: terraform apply
     Create --> Read: Success
@@ -221,6 +225,7 @@ stateDiagram-v2
 ### turingpi_flash Resource
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 stateDiagram-v2
     [*] --> Create: terraform apply
     Create --> Read: Success
@@ -247,6 +252,7 @@ stateDiagram-v2
 ### turingpi_node Resource (Composite)
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 stateDiagram-v2
     [*] --> Create: terraform apply
 
@@ -280,6 +286,7 @@ stateDiagram-v2
 ### Provisioning Workflow
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant User
     participant Terraform
@@ -321,6 +328,7 @@ sequenceDiagram
 ### Boot Verification Detail
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant Provider
     participant BMC
@@ -351,6 +359,7 @@ sequenceDiagram
 ## Authentication Flow
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant TF as Terraform
     participant Provider
