@@ -69,10 +69,8 @@ jobs:
         cli:
           - name: terraform
             version: "1.15.3"
-            rc_file: .terraformrc
           - name: tofu
             version: "1.12.0"
-            rc_file: .tofurc
     steps:
       - uses: actions/checkout@v4
 
@@ -101,8 +99,14 @@ jobs:
           tofu_wrapper: false
 
       - name: Write dev_overrides CLI config
+        # Write to $RUNNER_TEMP (auto-cleaned per job) and point the CLI at
+        # it via TF_CLI_CONFIG_FILE (honored by both terraform and tofu).
+        # Avoids polluting the persistent self-hosted runner's $HOME, which
+        # had been leaking stale dev_overrides paths into unrelated
+        # workflows on the same runner (cf. terraform-turingpi-modules#23).
         run: |
-          cat > "$HOME/${{ matrix.cli.rc_file }}" << EOF
+          CFG="$RUNNER_TEMP/cli-smoketest.tfrc"
+          cat > "$CFG" << EOF
           provider_installation {
             dev_overrides {
               "freed-dev-llc/turingpi" = "$RUNNER_TEMP/provider-bin"
@@ -110,6 +114,7 @@ jobs:
             direct {}
           }
           EOF
+          echo "TF_CLI_CONFIG_FILE=$CFG" >> $GITHUB_ENV
 
       - name: ${{ matrix.cli.name }} version
         run: ${{ matrix.cli.name }} version
