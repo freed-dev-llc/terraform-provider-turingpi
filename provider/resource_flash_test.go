@@ -26,14 +26,10 @@ func TestResourceFlash(t *testing.T) {
 func TestResourceFlash_Schema(t *testing.T) {
 	r := resourceFlash()
 
-	// Check node field exists
-	if _, ok := r.Schema["node"]; !ok {
-		t.Error("schema missing 'node' field")
-	}
-
-	// Check firmware_file field exists
-	if _, ok := r.Schema["firmware_file"]; !ok {
-		t.Error("schema missing 'firmware_file' field")
+	for _, f := range []string{"node", "firmware_file", "firmware_url"} {
+		if _, ok := r.Schema[f]; !ok {
+			t.Errorf("schema missing %q field", f)
+		}
 	}
 }
 
@@ -46,6 +42,7 @@ func TestResourceFlash_SchemaTypes(t *testing.T) {
 	}{
 		{"node", schema.TypeInt},
 		{"firmware_file", schema.TypeString},
+		{"firmware_url", schema.TypeString},
 	}
 
 	for _, tt := range tests {
@@ -57,27 +54,74 @@ func TestResourceFlash_SchemaTypes(t *testing.T) {
 	}
 }
 
+// firmware_file and firmware_url are mutually exclusive — exactly one of the
+// two must be set on every turingpi_flash resource (issue #66: URL path is the
+// only reliable code path; the file path is kept for back-compat with a
+// deprecation note).
 func TestResourceFlash_RequiredFields(t *testing.T) {
 	r := resourceFlash()
 
 	if !r.Schema["node"].Required {
-		t.Error("node should be required")
+		t.Error("node should be Required")
+	}
+	if r.Schema["firmware_file"].Required {
+		t.Error("firmware_file should now be Optional (use ExactlyOneOf with firmware_url)")
+	}
+	if r.Schema["firmware_url"].Required {
+		t.Error("firmware_url should be Optional (use ExactlyOneOf with firmware_file)")
 	}
 
-	if !r.Schema["firmware_file"].Required {
-		t.Error("firmware_file should be required")
+	for _, f := range []string{"firmware_file", "firmware_url"} {
+		exo := r.Schema[f].ExactlyOneOf
+		if len(exo) != 2 {
+			t.Errorf("%s should declare ExactlyOneOf with 2 entries, got %v", f, exo)
+			continue
+		}
+		if !(exo[0] == "firmware_file" && exo[1] == "firmware_url") &&
+			!(exo[0] == "firmware_url" && exo[1] == "firmware_file") {
+			t.Errorf("%s ExactlyOneOf should be {firmware_file, firmware_url}, got %v", f, exo)
+		}
 	}
 }
 
 func TestResourceFlash_ForceNewFields(t *testing.T) {
 	r := resourceFlash()
 
-	if !r.Schema["node"].ForceNew {
-		t.Error("node should have ForceNew=true")
+	for _, f := range []string{"node", "firmware_file", "firmware_url"} {
+		if !r.Schema[f].ForceNew {
+			t.Errorf("%s should have ForceNew=true", f)
+		}
+	}
+}
+
+// firmware_url must look like an http(s) URL — the BMC only accepts that.
+func TestResourceFlash_FirmwareURLValidation(t *testing.T) {
+	r := resourceFlash()
+	validate := r.Schema["firmware_url"].ValidateDiagFunc
+	if validate == nil {
+		t.Fatal("firmware_url should have ValidateDiagFunc")
 	}
 
-	if !r.Schema["firmware_file"].ForceNew {
-		t.Error("firmware_file should have ForceNew=true")
+	cases := []struct {
+		v       string
+		wantErr bool
+	}{
+		{"http://example.com/img.xz", false},
+		{"https://example.com/img.xz", false},
+		{"ftp://example.com/img.xz", true},
+		{"/local/path", true},
+		{"", true},
+	}
+	for _, c := range cases {
+		t.Run(c.v, func(t *testing.T) {
+			diags := validate(c.v, nil)
+			if c.wantErr && !diags.HasError() {
+				t.Errorf("expected error for %q, got none", c.v)
+			}
+			if !c.wantErr && diags.HasError() {
+				t.Errorf("expected no error for %q, got %v", c.v, diags)
+			}
+		})
 	}
 }
 
@@ -227,6 +271,17 @@ func TestUploadFlashStream_SurfacesBMCError(t *testing.T) {
 	}
 	if strings.Contains(err.Error(), "closed pipe") {
 		t.Errorf("error should not mention closed pipe, got: %v", err)
+	}
+}
+
+// buildURLFlashInit must percent-encode the firmware URL so that BMC's query
+// parser sees a single `file=...` value rather than treating the URL's own
+// `&`/`=` characters as additional params.
+func TestBuildURLFlashInit(t *testing.T) {
+	got := buildURLFlashInit("https://bmc.example", 1, "https://files.example/img.xz?a=1&b=2")
+	want := "https://bmc.example/api/bmc?opt=set&type=flash&node=1&file=https%3A%2F%2Ffiles.example%2Fimg.xz%3Fa%3D1%26b%3D2"
+	if got != want {
+		t.Errorf("buildURLFlashInit:\n got  %q\n want %q", got, want)
 	}
 }
 

@@ -8,11 +8,14 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,7 +23,7 @@ import (
 
 func resourceFlash() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Flashes firmware to a Turing Pi compute node. The node must be powered off before flashing.",
+		Description:   "Flashes firmware to a Turing Pi compute node. The node must be powered off before flashing. Exactly one of `firmware_file` or `firmware_url` must be set; `firmware_url` is recommended (see #63 — streaming upload via `firmware_file` reports completion before the eMMC write actually finishes).",
 		CreateContext: resourceFlashCreate,
 		ReadContext:   resourceFlashRead,
 		DeleteContext: resourceFlashDelete,
@@ -33,10 +36,22 @@ func resourceFlash() *schema.Resource {
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
 			},
 			"firmware_file": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Path to the firmware file to flash",
-				ForceNew:    true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"firmware_file", "firmware_url"},
+				Description:  "Path to the firmware file to flash, streamed to the BMC. **Deprecated:** the BMC reports completion when the upload finishes, not when the eMMC write does (issue #63). Prefer `firmware_url`.",
+			},
+			"firmware_url": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"firmware_file", "firmware_url"},
+				Description:  "HTTP(S) URL the BMC will fetch the firmware from directly. The BMC reports completion only after the full download + decompress + eMMC write, so this is the only reliable code path on current BMC firmware.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(
+					regexp.MustCompile(`^https?://`),
+					"firmware_url must start with http:// or https://",
+				)),
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -95,9 +110,22 @@ func (f *flashStatusResponse) isTransferring() (inProgress bool, bytesWritten, t
 	return true, 0, 0
 }
 
-func resourceFlashCreate(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFlashCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*ProviderConfig)
 	node := d.Get("node").(int)
+	apiNode := node - 1 // BMC flash API is 0-indexed
+
+	// URL-based flash: the BMC pulls the file itself and its Done signal is
+	// accurate (it covers download + decompress + eMMC write end-to-end).
+	if firmwareURL, ok := d.Get("firmware_url").(string); ok && firmwareURL != "" {
+		return resourceFlashFromURL(ctx, d, config, node, apiNode, firmwareURL)
+	}
+
+	// Streaming path (firmware_file). Warn about the known Done-too-early bug
+	// so users know why the resource may report success on a node that didn't
+	// actually receive the image.
+	tflog.Warn(ctx, "turingpi_flash: firmware_file uses streaming upload, which is known broken on current BMC firmware — Done returns before the eMMC write completes (issue #63). Prefer firmware_url.")
+
 	firmwarePath := d.Get("firmware_file").(string)
 
 	// Open the firmware file
@@ -122,12 +150,10 @@ func resourceFlashCreate(_ context.Context, d *schema.ResourceData, meta interfa
 	time.Sleep(2 * time.Second) // Wait for node to power off
 
 	// Step 2: Initiate flash operation
-	// API uses 0-indexed nodes
 	// file=stream indicates we'll upload via streaming, not from local SD card
-	apiNode := node - 1
-	url := fmt.Sprintf("%s/api/bmc?opt=set&type=flash&node=%d&file=stream&length=%d", config.Endpoint, apiNode, fileSize)
+	initURL := fmt.Sprintf("%s/api/bmc?opt=set&type=flash&node=%d&file=stream&length=%d", config.Endpoint, apiNode, fileSize)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", initURL, nil)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to create flash request: %w", err))
 	}
@@ -174,33 +200,92 @@ func resourceFlashCreate(_ context.Context, d *schema.ResourceData, meta interfa
 
 	fmt.Printf("Upload complete, waiting for flash to finish...\n")
 
-	// Step 4: Poll flash status until complete
-	timeout := time.After(25 * time.Minute)
+	if err := pollFlashUntilDone(config.Endpoint, config.Token, 25*time.Minute); err != nil {
+		return diag.FromErr(err)
+	}
+	fmt.Printf("Flash completed successfully\n")
+	d.SetId(fmt.Sprintf("flash-node-%d", node))
+	return nil
+}
+
+// resourceFlashFromURL drives the BMC's URL-based flash path: the BMC pulls
+// the firmware directly and only reports Done after the eMMC write actually
+// completes. This avoids the streaming-flash Done-too-early bug (issue #63).
+func resourceFlashFromURL(_ context.Context, d *schema.ResourceData, config *ProviderConfig, node, apiNode int, firmwareURL string) diag.Diagnostics {
+	fmt.Printf("Flashing node %d from URL %s\n", node, firmwareURL)
+
+	// Power off the node before flashing
+	if err := setNodePower(config.Endpoint, config.Token, node, false); err != nil {
+		return diag.FromErr(fmt.Errorf("failed to power off node before flash: %w", err))
+	}
+	time.Sleep(2 * time.Second)
+
+	// The BMC pulls firmwareURL itself; we just kick it off and poll.
+	initURL := buildURLFlashInit(config.Endpoint, apiNode, firmwareURL)
+
+	req, err := http.NewRequest("GET", initURL, nil)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("failed to create URL-flash request: %w", err))
+	}
+	req.Header.Set("Authorization", "Bearer "+config.Token)
+
+	resp, err := HTTPClient.Do(req)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("URL-flash initiation failed: %w", err))
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return diag.Errorf("URL-flash initiation failed with status %d: %s", resp.StatusCode, string(body))
+	}
+	// Body is informational ("ok") — don't depend on it.
+
+	fmt.Printf("BMC is pulling firmware from %s, waiting for flash to finish...\n", firmwareURL)
+
+	if err := pollFlashUntilDone(config.Endpoint, config.Token, 25*time.Minute); err != nil {
+		return diag.FromErr(err)
+	}
+	fmt.Printf("Flash completed successfully\n")
+	d.SetId(fmt.Sprintf("flash-node-%d", node))
+	return nil
+}
+
+// buildURLFlashInit constructs the BMC URL-flash init endpoint. The firmware
+// URL is QueryEscape'd because it itself can contain & and = (signed S3 URLs,
+// query strings, etc.) that would otherwise break the BMC's query parser.
+func buildURLFlashInit(endpoint string, apiNode int, firmwareURL string) string {
+	return fmt.Sprintf("%s/api/bmc?opt=set&type=flash&node=%d&file=%s",
+		endpoint, apiNode, url.QueryEscape(firmwareURL))
+}
+
+// pollFlashUntilDone polls /api/bmc?opt=get&type=flash every 5s until the BMC
+// reports Done or Error, or the timeout fires.
+func pollFlashUntilDone(endpoint, token string, timeout time.Duration) error {
+	deadline := time.After(timeout)
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
-		case <-timeout:
-			return diag.Errorf("flash operation timed out")
+		case <-deadline:
+			return fmt.Errorf("flash operation timed out after %s", timeout)
 		case <-ticker.C:
-			status, err := getFlashStatus(config.Endpoint, config.Token)
+			status, err := getFlashStatus(endpoint, token)
 			if err != nil {
 				fmt.Printf("Warning: failed to get flash status: %v\n", err)
 				continue
 			}
 
 			if status.Error != nil {
-				return diag.Errorf("flash failed: %s", *status.Error)
+				return fmt.Errorf("flash failed: %s", *status.Error)
 			}
 
 			if status.Done != nil {
-				fmt.Printf("Flash completed successfully\n")
-				d.SetId(fmt.Sprintf("flash-node-%d", node))
 				return nil
 			}
 
-			if status.Flashing != nil {
+			if status.Flashing != nil && status.Flashing.TotalBytes > 0 {
 				pct := float64(status.Flashing.BytesWritten) / float64(status.Flashing.TotalBytes) * 100
 				fmt.Printf("Flashing: %.1f%% (%d/%d bytes)\n", pct, status.Flashing.BytesWritten, status.Flashing.TotalBytes)
 			}
