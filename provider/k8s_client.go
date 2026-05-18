@@ -66,7 +66,7 @@ func (c *K8sClient) ApplyManifest(manifest string) error {
 	}
 	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
-	if err := os.WriteFile(tmpFile.Name(), []byte(manifest), 0644); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), []byte(manifest), 0600); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 
@@ -83,7 +83,7 @@ func (c *K8sClient) DeleteManifest(manifest string) error {
 	}
 	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
-	if err := os.WriteFile(tmpFile.Name(), []byte(manifest), 0644); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), []byte(manifest), 0600); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
 

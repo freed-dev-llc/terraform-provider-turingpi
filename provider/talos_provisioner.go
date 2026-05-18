@@ -397,7 +397,7 @@ func (p *TalosProvisioner) ProvisionCluster(ctx context.Context, cfg TalosCluste
 
 	// 2. Generate base configs
 	configDir := filepath.Join(p.workDir, "configs")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0750); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}
 
