@@ -57,31 +57,31 @@ Replace the deprecated resource with the new modules.
 ```hcl
 resource "turingpi_talos_cluster" "cluster" {
   name             = "my-cluster"
-  cluster_endpoint = "https://192.168.1.101:6443"
+  cluster_endpoint = "https://10.10.88.73:6443"
 
   control_plane {
-    host     = "192.168.1.101"
-    hostname = "cp1"
+    host     = "10.10.88.73"
+    hostname = "turing-cp1"
   }
 
   worker {
-    host     = "192.168.1.102"
-    hostname = "worker1"
+    host     = "10.10.88.74"
+    hostname = "turing-w1"
   }
 
   worker {
-    host     = "192.168.1.103"
-    hostname = "worker2"
+    host     = "10.10.88.75"
+    hostname = "turing-w2"
   }
 
   metallb {
     enabled  = true
-    ip_range = "192.168.1.200-192.168.1.220"
+    ip_range = "10.10.88.80-10.10.88.89"
   }
 
   ingress {
     enabled = true
-    ip      = "192.168.1.200"
+    ip      = "10.10.88.80"
   }
 
   kubeconfig_path = "./kubeconfig"
@@ -91,20 +91,21 @@ resource "turingpi_talos_cluster" "cluster" {
 **After (new modules):**
 
 ```hcl
-# Deploy Talos cluster using native provider
+# Deploy Talos cluster using the modules repo
 module "cluster" {
-  source = "freed-dev-llc/talos-cluster/turingpi"
+  source  = "freed-dev-llc/modules/turingpi//modules/talos-cluster"
+  version = "~> 1.4"
 
   cluster_name     = "my-cluster"
-  cluster_endpoint = "https://192.168.1.101:6443"
+  cluster_endpoint = "https://10.10.88.73:6443"
 
   control_plane = [
-    { host = "192.168.1.101", hostname = "cp1" }
+    { host = "10.10.88.73", hostname = "turing-cp1" }
   ]
 
   workers = [
-    { host = "192.168.1.102", hostname = "worker1" },
-    { host = "192.168.1.103", hostname = "worker2" }
+    { host = "10.10.88.74", hostname = "turing-w1" },
+    { host = "10.10.88.75", hostname = "turing-w2" }
   ]
 
   kubeconfig_path = "./kubeconfig"
@@ -123,18 +124,20 @@ provider "kubectl" {
 
 # Deploy MetalLB separately
 module "metallb" {
-  source     = "freed-dev-llc/metallb/kubernetes"
+  source     = "freed-dev-llc/modules/turingpi//modules/addons/metallb"
+  version    = "~> 1.4"
   depends_on = [module.cluster]
 
-  ip_range = "192.168.1.200-192.168.1.220"
+  ip_range = "10.10.88.80-10.10.88.89"
 }
 
 # Deploy Ingress-NGINX separately
 module "ingress" {
-  source          = "freed-dev-llc/ingress-nginx/kubernetes"
-  depends_on      = [module.metallb]
+  source     = "freed-dev-llc/modules/turingpi//modules/addons/ingress-nginx"
+  version    = "~> 1.4"
+  depends_on = [module.metallb]
 
-  loadbalancer_ip = "192.168.1.200"
+  loadbalancer_ip = "10.10.88.80"
 }
 ```
 
