@@ -80,21 +80,21 @@ Releases are automated via Makefile targets. All releases are GPG-signed and pub
 
 ```bash
 # Full release: updates docs, runs tests, commits, tags, and pushes
-make release VERSION=1.0.10
+make release VERSION=1.5.1
 ```
 
 This command will:
 1. Update version references in `README.md`, `docs/`, and `examples/`
 2. Run the full test suite
 3. Commit the version updates (GPG-signed)
-4. Create a signed tag `v1.0.10`
+4. Create a signed tag `v1.5.1`
 5. Push to origin (triggers GitHub Actions release workflow)
 
 ### Partial Release Prep
 
 ```bash
 # Just update version numbers (no commit/tag)
-make release-prep VERSION=1.0.10
+make release-prep VERSION=1.5.1
 ```
 
 ### Post-Release
