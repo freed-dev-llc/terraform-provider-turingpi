@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Resource docs**: `docs/resources/{usb_boot,node_to_msd,clear_usb_boot}.md` examples set `turingpi_power.state` to a bool (`true` / `false`). The schema requires a string (`"on"` / `"off"` / `"reset"`) and has since v1.3.1; bool values would fail at plan time. Examples corrected (#79, #80).
+- **`docs/resources/k3s_cluster.md` "Import" section** said the resource cannot be imported — but it has had an `Importer` registered since v1.3.5 (importing the four-tuple `cluster_name:control_plane_host:ssh_user:ssh_key_path`). Section rewritten with the correct format + a note that `ssh_password` doesn't survive import.
+
+### Dependencies
+
+- ci: bump github/codeql-action from 4.32.6 to 4.35.5 (#73)
+- ci: bump actions/dependency-review-action from 4.9.0 to 5.0.0 (#74)
+- ci: bump crazy-max/ghaction-import-gpg from 6.3.0 to 7.0.0 (#75)
+- deps: bump helm.sh/helm/v3 from 3.20.2 to 3.21.0 (#76)
+- ci: bump opentofu/setup-opentofu from 2.0.0 to 2.0.1 (#77)
+- deps: bump golang.org/x/crypto from 0.49.0 to 0.51.0 (#78)
+- ci: bump actions/upload-artifact from 5.0.0 to 7.0.1 (#72)
 
 ### Changed
 
@@ -26,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.github/PULL_REQUEST_TEMPLATE.md` (uppercase): deleted in favor of the lowercase `pull_request_template.md` (45 lines, includes signed-commit checkbox). GitHub uses one or the other; having both with different content was a source of confusion (#80).
 - `.editorconfig` added (#82) — LF / UTF-8 / trailing-whitespace trim across Go (tabs), Markdown, Makefile, YAML, and other text files.
 - `TODO.md`: collapsed duplicate `Milestone: v1.6.0` heading — renamed the "Advanced Features" section to v1.7.0 and the "Multi-Cluster & Observability" section to v1.8.0.
+- `docs/index.md`: switched `192.168.1.x` examples to the canonical `10.10.88.x` (matches the test cluster used in README + every other doc) + added `turing-cp1` / `turing-w1` hostnames to the talos-cluster example.
+- `.github/ISSUE_TEMPLATE/bug.yml` placeholders refreshed: provider 0.1.0 → 1.5.0, Terraform 1.9.0 → 1.15.3 (matches `cli-smoketest`), Go 1.22 → 1.25 (matches `go.mod`), Turing Pi firmware 2.0.5 → 2.3.4 (matches test cluster).
 
 ## [1.5.0] - 2026-05-18
 

@@ -70,7 +70,7 @@ The provider requires BMC credentials to authenticate with the Turing Pi board.
 ```bash
 export TURINGPI_USERNAME=root
 export TURINGPI_PASSWORD=turing
-export TURINGPI_ENDPOINT=https://192.168.1.100
+export TURINGPI_ENDPOINT=https://10.10.88.70
 export TURINGPI_INSECURE=true  # optional, for self-signed/expired certs
 ```
 
@@ -115,8 +115,8 @@ module "cluster" {
   version = ">= 1.5.0"
 
   cluster_name     = "my-cluster"
-  cluster_endpoint = "https://192.168.1.101:6443"
-  control_plane    = [{ host = "192.168.1.101" }]
-  workers          = [{ host = "192.168.1.102" }]
+  cluster_endpoint = "https://10.10.88.73:6443"
+  control_plane    = [{ host = "10.10.88.73", hostname = "turing-cp1" }]
+  workers          = [{ host = "10.10.88.74", hostname = "turing-w1" }]
 }
 ```

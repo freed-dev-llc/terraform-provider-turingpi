@@ -247,7 +247,21 @@ Before using this resource, ensure:
 
 ## Import
 
-K3s cluster resources cannot be imported as they require SSH credentials that are not stored in Terraform state.
+K3s cluster resources can be imported using a four-part identifier:
+
+```
+cluster_name:control_plane_host:ssh_user:ssh_key_path
+```
+
+Example:
+
+```sh
+terraform import turingpi_k3s_cluster.cluster homelab:10.10.88.73:root:~/.ssh/id_ed25519
+```
+
+The importer (added in v1.3.5) connects to the control plane host over SSH using the provided credentials, reads the running cluster configuration, and writes it into Terraform state. The cluster's worker list and per-node SSH details are then expected to match what's declared in your `.tf` configuration on the next `terraform plan` — anything that diverges will show up as a drift.
+
+> The `ssh_password` field cannot be recovered through import (Terraform state stores it sensitively, and the import path doesn't read passwords back from the node). Use SSH-key authentication for any cluster you intend to import.
 
 ## Lifecycle
 
