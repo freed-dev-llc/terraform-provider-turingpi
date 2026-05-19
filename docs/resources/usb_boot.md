@@ -31,7 +31,7 @@ resource "turingpi_usb_boot" "node1" {
 ```hcl
 resource "turingpi_power" "node1_off" {
   node  = 1
-  state = false
+  state = "off"
 }
 
 resource "turingpi_usb_boot" "node1" {

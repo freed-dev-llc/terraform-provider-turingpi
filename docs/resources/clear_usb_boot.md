@@ -45,7 +45,7 @@ resource "turingpi_clear_usb_boot" "node1" {
 # Power on the node
 resource "turingpi_power" "node1" {
   node  = 1
-  state = true
+  state = "on"
 
   depends_on = [turingpi_clear_usb_boot.node1]
 }

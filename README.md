@@ -74,7 +74,7 @@ terraform {
   required_providers {
     turingpi = {
       source  = "freed-dev-llc/turingpi"
-      version = "~> 1.4.0"
+      version = "~> 1.5.0"
     }
   }
 }
@@ -217,14 +217,18 @@ resource "turingpi_power" "node2_reset" {
 
 ### turingpi_flash
 
-Flash firmware to a node. Changes to `node` or `firmware_file` trigger resource recreation.
+Flash firmware to a node. Changes to `node` or `firmware_url` trigger resource recreation.
 
 ```hcl
+# Recommended: BMC pulls the image from the URL itself (added in v1.5.0).
 resource "turingpi_flash" "node1" {
-  node          = 1
-  firmware_file = "/path/to/firmware.img"
+  node         = 1
+  firmware_url = "https://example.local/firmware.img"
 }
 ```
+
+`firmware_file` (local-path streaming) is deprecated and known broken on current
+BMC firmware — see `docs/resources/flash.md`. Prefer `firmware_url`.
 
 ### turingpi_usb
 
@@ -360,6 +364,8 @@ See the [examples](./examples) directory for complete configurations:
 - [basic](./examples/basic) - Simple power control
 - [flash-firmware](./examples/flash-firmware) - Firmware flashing
 - [full-provisioning](./examples/full-provisioning) - Complete node management with boot verification
+- [k3s-cluster](./examples/k3s-cluster) - K3s cluster (deprecated; prefer the `terraform-turingpi-modules` K3s module)
+- [talos-cluster](./examples/talos-cluster) - Talos cluster (deprecated; prefer the `terraform-turingpi-modules` Talos module)
 
 ## Development
 

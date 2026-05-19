@@ -30,7 +30,7 @@ resource "turingpi_node_to_msd" "node1" {
 # First, power off the node
 resource "turingpi_power" "node1_off" {
   node  = 1
-  state = false
+  state = "off"
 }
 
 # Then reboot into MSD mode
@@ -134,7 +134,7 @@ resource "turingpi_node_to_msd" "node1" {
 # 4. Power cycle to boot normally
 resource "turingpi_power" "node1_boot" {
   node  = 1
-  state = true
+  state = "on"
 
   triggers = {
     after_imaging = var.imaging_complete
