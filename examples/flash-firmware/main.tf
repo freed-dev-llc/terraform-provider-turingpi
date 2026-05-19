@@ -17,14 +17,14 @@ variable "firmware_url" {
 # Flash firmware to node 1 (recommended path — BMC pulls from URL).
 # Note: Changing node or firmware_url will recreate the resource.
 resource "turingpi_flash" "node1" {
-  node          = 1
-  firmware_url  = var.firmware_url
+  node         = 1
+  firmware_url = var.firmware_url
 }
 
 # Flash same firmware to node 2
 resource "turingpi_flash" "node2" {
-  node          = 2
-  firmware_url  = var.firmware_url
+  node         = 2
+  firmware_url = var.firmware_url
 }
 
 # Legacy alternative: firmware_file (streaming upload) is deprecated and known
