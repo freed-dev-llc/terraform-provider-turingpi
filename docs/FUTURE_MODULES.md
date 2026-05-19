@@ -1,5 +1,11 @@
 # Future Modules: K3s and Talos Cluster Deployment
 
+> **STATUS — HISTORICAL.** This document was the original (2025) implementation plan
+> for in-provider cluster resources. Both shipped in the v1.1.x line and are now
+> **deprecated** (slated for removal in v2.0.0); users should adopt the equivalent
+> modules in [`terraform-turingpi-modules`](https://github.com/freed-dev-llc/terraform-turingpi-modules)
+> instead. Kept here as a reference for the original design discussion.
+
 This document outlines the implementation plan for two new high-level modules that will enable complete Kubernetes cluster deployment on Turing Pi 2.5 hardware.
 
 ## Overview

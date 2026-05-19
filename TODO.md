@@ -2,7 +2,12 @@
 
 This file tracks planned features and implementation tasks for the Terraform Turing Pi provider.
 
-## Current Release: v1.4.1 (2026-05-17)
+## Current Release: v1.5.0 (2026-05-18)
+
+### Recently Completed (v1.4.1 → v1.5.0)
+
+- [x] **Added** `firmware_url` argument to `turingpi_flash` — BMC-pull path (`opt=set&type=flash&file=<URL>`) that actually writes eMMC, vs. the deprecated `firmware_file` streaming upload that returns `Done` in ~90 s without flashing. Issues #63 / #66 closed `not planned`.
+- [x] **Gosec triage cycle** — dead `pkg/` tree removed, file permission tightening, 23 → 0 open code-scanning alerts.
 
 ### Recently Completed (v1.4.0 → v1.4.1)
 
@@ -18,9 +23,9 @@ This file tracks planned features and implementation tasks for the Terraform Tur
 
 ---
 
-## Milestone: v1.5.0 - Polish & Stability
+## Milestone: v1.6.0 - Polish & Stability
 
-Items carried over from the original v1.4.0 plan (none shipped before the v1.4.x line closed).
+Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shipped firmware_url + gosec triage).
 
 ### Testing Infrastructure
 - [ ] Add mock Kubernetes API for testing

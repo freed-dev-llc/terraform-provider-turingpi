@@ -1,6 +1,9 @@
 # Flash Firmware Example
 
-This example shows how to flash firmware to Turing Pi nodes.
+This example shows how to flash firmware to Turing Pi nodes using the BMC's
+URL-based pull (added in v1.5.0). The provider's local-file streaming path
+(`firmware_file`) is deprecated and known broken — see
+`docs/resources/flash.md`.
 
 ## Usage
 
@@ -11,19 +14,20 @@ export TURINGPI_USERNAME=root
 export TURINGPI_PASSWORD=turing
 ```
 
-2. Initialize and apply with firmware path:
+2. Initialize and apply with the firmware URL (HTTPS, reachable from the BMC):
 
 ```bash
 terraform init
-terraform plan -var="firmware_path=/path/to/firmware.img"
-terraform apply -var="firmware_path=/path/to/firmware.img"
+terraform plan -var="firmware_url=https://example.local/firmware.img"
+terraform apply -var="firmware_url=https://example.local/firmware.img"
 ```
 
 ## Notes
 
-- The `turingpi_flash` resource uses `ForceNew` for both `node` and `firmware_file`
+- The `turingpi_flash` resource uses `ForceNew` for both `node` and `firmware_url`
 - Changing either value will destroy and recreate the resource (re-flash)
-- Ensure the firmware file exists and is accessible
+- The URL must be reachable from the BMC's network (typically an internal HTTP
+  server or an R2/S3 bucket)
 
 <!-- BEGIN_TF_DOCS -->
 
