@@ -150,20 +150,20 @@ resource "turingpi_k3s_cluster" "cluster" {
   name = "my-cluster"
 
   control_plane {
-    host     = "192.168.1.101"
+    host     = "10.10.88.73"
     ssh_user = "root"
     ssh_key  = file("~/.ssh/id_rsa")
   }
 
   worker {
-    host     = "192.168.1.102"
+    host     = "10.10.88.74"
     ssh_user = "root"
     ssh_key  = file("~/.ssh/id_rsa")
   }
 
   metallb {
     enabled  = true
-    ip_range = "192.168.1.200-192.168.1.220"
+    ip_range = "10.10.88.80-10.10.88.89"
   }
 }
 ```

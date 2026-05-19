@@ -47,7 +47,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 
 ---
 
-## Milestone: v1.6.0 - Advanced Features
+## Milestone: v1.7.0 - Advanced Features
 
 ### Cluster Operations
 - [ ] Implement cluster upgrade support (K3s version bumps)
@@ -65,7 +65,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 
 ---
 
-## Milestone: v1.7.0 - Multi-Cluster & Observability
+## Milestone: v1.8.0 - Multi-Cluster & Observability
 
 ### Multi-Cluster Support
 - [ ] Support managing multiple clusters
