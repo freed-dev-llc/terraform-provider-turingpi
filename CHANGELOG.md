@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Examples lead with `firmware_url`**: `examples/flash-firmware/main.tf` (and the README snippet for `turingpi_flash`) now show the URL-based path first; `firmware_file` is mentioned as deprecated with a pointer to `docs/resources/flash.md`. The streaming path is still functional in code but known broken on current BMC firmware (#79).
 - **Version pins refreshed**: `required_providers` floor in README, `docs/index.md`, and all `examples/*/main.tf` now use `>= 1.5.0` / `~> 1.5.0` (was a mix of `>= 1.2.0`, `>= 1.3.0`, `~> 1.4.0`).
-- **`docs/MIGRATION.md`**: aligned with the rest of the docs — `10.10.88.x` example IPs (was `192.168.1.x`), canonical Terraform Registry source paths (`freed-dev-llc/modules/turingpi//modules/<name>`), and `turing-cp1` / `turing-w*` hostnames.
+- **`docs/MIGRATION.md`**: aligned with the rest of the docs — `10.10.88.x` example IPs (was `192.168.1.x`) in both the Talos and K3s sections, canonical Terraform Registry source paths (`freed-dev-llc/modules/turingpi//modules/<name>`), and `turing-cp1` / `turing-w*` hostnames.
 - **`docs/FUTURE_MODULES.md`**: prefixed with a "HISTORICAL" banner — the modules it plans shipped in v1.1.x and are now deprecated.
 - **`TODO.md`**: v1.5.0 promoted from "Milestone" to "Current Release"; the remaining never-shipped work renamed to a v1.6.0 milestone.
 
@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG footer: added compare-link entries for `[1.4.1]` and `[1.5.0]`; `[Unreleased]` advanced from `v1.4.0...HEAD` to `v1.5.0...HEAD` (#79).
 - `CONTRIBUTING.md`: `make release VERSION=` example bumped from 1.0.10 to 1.5.1.
 - `.github/PULL_REQUEST_TEMPLATE.md` (uppercase): deleted in favor of the lowercase `pull_request_template.md` (45 lines, includes signed-commit checkbox). GitHub uses one or the other; having both with different content was a source of confusion (#80).
+- `.editorconfig` added (#82) — LF / UTF-8 / trailing-whitespace trim across Go (tabs), Markdown, Makefile, YAML, and other text files.
+- `TODO.md`: collapsed duplicate `Milestone: v1.6.0` heading — renamed the "Advanced Features" section to v1.7.0 and the "Multi-Cluster & Observability" section to v1.8.0.
 
 ## [1.5.0] - 2026-05-18
 
