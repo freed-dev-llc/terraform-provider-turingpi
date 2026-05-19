@@ -61,7 +61,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_firmware_path"></a> [firmware\_path](#input\_firmware\_path) | Path to the firmware image file | `string` | n/a | yes |
+| <a name="input_firmware_url"></a> [firmware\_url](#input\_firmware\_url) | HTTPS URL the BMC will pull the firmware image from | `string` | n/a | yes |
 
 ## Outputs
 
@@ -71,7 +71,7 @@ No outputs.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_firmware_path"></a> [firmware\_path](#input\_firmware\_path) | Path to the firmware image file | `string` | n/a | yes |
+| <a name="input_firmware_url"></a> [firmware\_url](#input\_firmware\_url) | HTTPS URL the BMC will pull the firmware image from | `string` | n/a | yes |
 
 ## Outputs
 
