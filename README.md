@@ -92,7 +92,7 @@ Using environment variables:
 ```bash
 export TURINGPI_USERNAME=root
 export TURINGPI_PASSWORD=turing
-export TURINGPI_ENDPOINT=https://192.168.1.100  # optional
+export TURINGPI_ENDPOINT=https://10.10.88.70  # optional
 export TURINGPI_INSECURE=true                   # optional, for self-signed/expired certs
 ```
 
