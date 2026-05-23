@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ci: bump opentofu/setup-opentofu from 2.0.0 to 2.0.1 (#77)
 - deps: bump golang.org/x/crypto from 0.49.0 to 0.51.0 (#78)
 - ci: bump actions/upload-artifact from 5.0.0 to 7.0.1 (#72)
+- deps: bump github.com/containerd/containerd from 1.7.30 to 1.7.32 (#85)
 
 ### Changed
 
