@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Resource docs**: `docs/resources/{usb_boot,node_to_msd,clear_usb_boot}.md` examples set `turingpi_power.state` to a bool (`true` / `false`). The schema requires a string (`"on"` / `"off"` / `"reset"`) and has since v1.3.1; bool values would fail at plan time. Examples corrected (#79, #80).
-- **`docs/resources/k3s_cluster.md` "Import" section** said the resource cannot be imported — but it has had an `Importer` registered since v1.3.5 (importing the four-tuple `cluster_name:control_plane_host:ssh_user:ssh_key_path`). Section rewritten with the correct format + a note that `ssh_password` doesn't survive import.
+- **`docs/resources/k3s_cluster.md` "Import" section** said the resource cannot be imported - but it has had an `Importer` registered since v1.3.5 (importing the four-tuple `cluster_name:control_plane_host:ssh_user:ssh_key_path`). Section rewritten with the correct format + a note that `ssh_password` doesn't survive import.
 
 ### Dependencies
 
@@ -29,8 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Examples lead with `firmware_url`**: `examples/flash-firmware/main.tf` (and the README snippet for `turingpi_flash`) now show the URL-based path first; `firmware_file` is mentioned as deprecated with a pointer to `docs/resources/flash.md`. The streaming path is still functional in code but known broken on current BMC firmware (#79).
 - **Version pins refreshed**: `required_providers` floor in README, `docs/index.md`, and all `examples/*/main.tf` now use `>= 1.5.0` / `~> 1.5.0` (was a mix of `>= 1.2.0`, `>= 1.3.0`, `~> 1.4.0`).
-- **`docs/MIGRATION.md`**: aligned with the rest of the docs — `10.10.88.x` example IPs (was `192.168.1.x`) in both the Talos and K3s sections, canonical Terraform Registry source paths (`freed-dev-llc/modules/turingpi//modules/<name>`), and `turing-cp1` / `turing-w*` hostnames.
-- **`docs/FUTURE_MODULES.md`**: prefixed with a "HISTORICAL" banner — the modules it plans shipped in v1.1.x and are now deprecated.
+- **`docs/MIGRATION.md`**: aligned with the rest of the docs - `10.10.88.x` example IPs (was `192.168.1.x`) in both the Talos and K3s sections, canonical Terraform Registry source paths (`freed-dev-llc/modules/turingpi//modules/<name>`), and `turing-cp1` / `turing-w*` hostnames.
+- **`docs/FUTURE_MODULES.md`**: prefixed with a "HISTORICAL" banner - the modules it plans shipped in v1.1.x and are now deprecated.
 - **`TODO.md`**: v1.5.0 promoted from "Milestone" to "Current Release"; the remaining never-shipped work renamed to a v1.6.0 milestone.
 
 ### Documentation
@@ -38,21 +38,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG footer: added compare-link entries for `[1.4.1]` and `[1.5.0]`; `[Unreleased]` advanced from `v1.4.0...HEAD` to `v1.5.0...HEAD` (#79).
 - `CONTRIBUTING.md`: `make release VERSION=` example bumped from 1.0.10 to 1.5.1.
 - `.github/PULL_REQUEST_TEMPLATE.md` (uppercase): deleted in favor of the lowercase `pull_request_template.md` (45 lines, includes signed-commit checkbox). GitHub uses one or the other; having both with different content was a source of confusion (#80).
-- `.editorconfig` added (#82) — LF / UTF-8 / trailing-whitespace trim across Go (tabs), Markdown, Makefile, YAML, and other text files.
-- `TODO.md`: collapsed duplicate `Milestone: v1.6.0` heading — renamed the "Advanced Features" section to v1.7.0 and the "Multi-Cluster & Observability" section to v1.8.0.
+- `.editorconfig` added (#82) - LF / UTF-8 / trailing-whitespace trim across Go (tabs), Markdown, Makefile, YAML, and other text files.
+- `TODO.md`: collapsed duplicate `Milestone: v1.6.0` heading - renamed the "Advanced Features" section to v1.7.0 and the "Multi-Cluster & Observability" section to v1.8.0.
 - `docs/index.md`: switched `192.168.1.x` examples to the canonical `10.10.88.x` (matches the test cluster used in README + every other doc) + added `turing-cp1` / `turing-w1` hostnames to the talos-cluster example.
 - `.github/ISSUE_TEMPLATE/bug.yml` placeholders refreshed: provider 0.1.0 → 1.5.0, Terraform 1.9.0 → 1.15.3 (matches `cli-smoketest`), Go 1.22 → 1.25 (matches `go.mod`), Turing Pi firmware 2.0.5 → 2.3.4 (matches test cluster).
 
 ## [1.5.0] - 2026-05-18
 
 ### Added
-- **`turingpi_flash`: new `firmware_url` field** (#67, refs #66 / #63). When set, the BMC pulls the firmware directly via HTTP(S); its `Done` signal then covers download + decompress + eMMC write end-to-end. This is the only code path that reliably reports completion on current BMC firmware. Mutually exclusive with `firmware_file` (`ExactlyOneOf`). Backward-compatible — configs setting `firmware_file` keep working.
+- **`turingpi_flash`: new `firmware_url` field** (#67, refs #66 / #63). When set, the BMC pulls the firmware directly via HTTP(S); its `Done` signal then covers download + decompress + eMMC write end-to-end. This is the only code path that reliably reports completion on current BMC firmware. Mutually exclusive with `firmware_file` (`ExactlyOneOf`). Backward-compatible - configs setting `firmware_file` keep working.
 
 ### Deprecated
-- **`turingpi_flash`: `firmware_file`** (#67, refs #63). The BMC reports `Done` as soon as the multipart upload finishes — *not* when the eMMC write completes — so `terraform apply` can succeed against a node whose image was never actually written. The field is kept for back-compat and now emits a `tflog.Warn` on use; prefer `firmware_url`. Tracker for the underlying fix: #66.
+- **`turingpi_flash`: `firmware_file`** (#67, refs #63). The BMC reports `Done` as soon as the multipart upload finishes - *not* when the eMMC write completes - so `terraform apply` can succeed against a node whose image was never actually written. The field is kept for back-compat and now emits a `tflog.Warn` on use; prefer `firmware_url`. Tracker for the underlying fix: #66.
 
 ### Removed
-- Delete dead `pkg/{ssh,talos,helm,k3s,kubeconfig}` tree (#65) — leftover from an unfinished refactor, no non-test importers. Closes a batch of stale gosec alerts as a side effect.
+- Delete dead `pkg/{ssh,talos,helm,k3s,kubeconfig}` tree (#65) - leftover from an unfinished refactor, no non-test importers. Closes a batch of stale gosec alerts as a side effect.
 
 ### Changed
 - `provider/resource_flash.go`: extract `pollFlashUntilDone` and `buildURLFlashInit` so the streaming and URL paths share the wait loop and the URL-encoding logic is unit-testable.
@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### CI
 - Add `cli-smoketest` matrix job exercising both `terraform` and `opentofu` against the built provider (#58).
-- Stop the smoketest from polluting `$HOME/.terraformrc` with `dev_overrides` on the persistent self-hosted runner (#61) — use `TF_CLI_CONFIG_FILE` pointed at `$RUNNER_TEMP`.
+- Stop the smoketest from polluting `$HOME/.terraformrc` with `dev_overrides` on the persistent self-hosted runner (#61) - use `TF_CLI_CONFIG_FILE` pointed at `$RUNNER_TEMP`.
 - Add `paths-ignore: docs/**` to the secret-scanning workflow so doc-only PRs don't trigger it (#64).
 
 ### Documentation
