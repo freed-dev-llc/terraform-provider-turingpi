@@ -2,24 +2,31 @@
 
 This file tracks planned features and implementation tasks for the Terraform Turing Pi provider.
 
-## Current Release: v1.5.0 (2026-05-18)
+## Current Release: v1.5.1 (2026-05-24)
+
+### Recently Completed (v1.5.0 → v1.5.1)
+
+- [x] **Fixed** resource docs that set `turingpi_power.state` to a bool (`true`/`false`); the schema has required a string (`"on"`/`"off"`/`"reset"`) since v1.3.1, so those examples failed at plan time (#79, #80)
+- [x] **Fixed** the `k3s_cluster` "Import" docs, which wrongly claimed the resource could not be imported; it has had an `Importer` registered since v1.3.5
+- [x] **Docs consistency pass**: examples lead with `firmware_url` (deprecated `firmware_file` flagged), `required_providers` pins bumped to `>= 1.5.0` / `~> 1.5.0`, canonical `10.10.88.x` IPs and `turing-cp1` / `turing-w*` hostnames across MIGRATION.md and index.md, duplicate PR template removed, `.editorconfig` added (#79, #80, #82)
+- [x] **Dependencies**: containerd 1.7.30 → 1.7.32, helm/v3 3.20.2 → 3.21.0, x/crypto 0.49.0 → 0.51.0, plus CI action bumps (#72-#78, #85)
 
 ### Recently Completed (v1.4.1 → v1.5.0)
 
-- [x] **Added** `firmware_url` argument to `turingpi_flash` — BMC-pull path (`opt=set&type=flash&file=<URL>`) that actually writes eMMC, vs. the deprecated `firmware_file` streaming upload that returns `Done` in ~90 s without flashing. Issues #63 / #66 closed `not planned`.
-- [x] **Gosec triage cycle** — dead `pkg/` tree removed, file permission tightening, 23 → 0 open code-scanning alerts.
+- [x] **Added** `firmware_url` argument to `turingpi_flash` - BMC-pull path (`opt=set&type=flash&file=<URL>`) that actually writes eMMC, vs. the deprecated `firmware_file` streaming upload that returns `Done` in ~90 s without flashing. Issues #63 / #66 closed `not planned`.
+- [x] **Gosec triage cycle** - dead `pkg/` tree removed, file permission tightening, 23 → 0 open code-scanning alerts.
 
 ### Recently Completed (v1.4.0 → v1.4.1)
 
 - [x] **Fixed** `turingpi_flash` upload failure on older BMC firmware (#46): send multipart upload with explicit `Content-Length` instead of `Transfer-Encoding: chunked`
-- [x] **Refactored** provider/resource handlers from deprecated `terraform-plugin-sdk/v2` callbacks (`ConfigureFunc`, `Create`/`Read`/`Update`/`Delete`) to `*Context` variants — resolves all staticcheck SA1019 findings
-- [x] **Security** — bump `helm.sh/helm/v3` 3.20.0 → 3.20.2 (CVE-2026-35206), plus `golang.org/x/crypto`, `grpc` (transitive), `terraform-plugin-sdk/v2` 2.38.2 → 2.40.1
+- [x] **Refactored** provider/resource handlers from deprecated `terraform-plugin-sdk/v2` callbacks (`ConfigureFunc`, `Create`/`Read`/`Update`/`Delete`) to `*Context` variants - resolves all staticcheck SA1019 findings
+- [x] **Security** - bump `helm.sh/helm/v3` 3.20.0 → 3.20.2 (CVE-2026-35206), plus `golang.org/x/crypto`, `grpc` (transitive), `terraform-plugin-sdk/v2` 2.38.2 → 2.40.1
 - [x] **CI hardening** for the containerized self-hosted runner:
   - gosec: replaced `securego/gosec` Docker action with `go install` + binary (pinned v2.22.11 to avoid v2.23.0's invalid SARIF)
   - terraform-docs: replaced `terraform-docs/gh-actions@v1` Docker action with `go install` + binary (v0.20.0)
   - talos-image workflow restored after ~2.5 months of latent breakage: rclone-based R2 reads bypass Cloudflare bot challenge; rclone upgraded from apt v1.60.1 to upstream v1.74.1+; R2 token rotated to bucket-scoped credentials; `no_check_bucket = true` added for bucket-scoped tokens
-- [x] **Added** `cli-smoketest` matrix job: builds the dev provider and runs `validate` under both Terraform 1.15.3 and OpenTofu 1.12.0 via dev_overrides — catches plugin-protocol / manifest / schema regressions in either tool at PR time
-- [x] **OpenTofu Registry** submission in progress (#45): signing key registered under `freed-dev-llc` namespace; provider submission auto-validated and awaiting maintainer merge (opentofu/registry PR #4261)
+- [x] **Added** `cli-smoketest` matrix job: builds the dev provider and runs `validate` under both Terraform 1.15.3 and OpenTofu 1.12.0 via dev_overrides - catches plugin-protocol / manifest / schema regressions in either tool at PR time
+- [x] **OpenTofu Registry** live (#45): provider published under the `freed-dev-llc` namespace (opentofu/registry PR #4261 merged); README badge added in v1.5.0 (#62)
 
 ---
 
@@ -30,7 +37,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 ### Testing Infrastructure
 - [ ] Add mock Kubernetes API for testing
 - [ ] Create cluster integration test framework
-- [ ] Add acceptance tests for all resources (`TF_ACC=1`) — requires hardware-attached CI runner
+- [ ] Add acceptance tests for all resources (`TF_ACC=1`) - requires hardware-attached CI runner
 - [ ] Improve test coverage (target: 80%+)
 
 ### Documentation
