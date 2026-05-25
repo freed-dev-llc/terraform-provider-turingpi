@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-05-24
+
 ### Fixed
 
 - **Resource docs**: `docs/resources/{usb_boot,node_to_msd,clear_usb_boot}.md` examples set `turingpi_power.state` to a bool (`true` / `false`). The schema requires a string (`"on"` / `"off"` / `"reset"`) and has since v1.3.1; bool values would fail at plan time. Examples corrected (#79, #80).
@@ -513,7 +515,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation workflow with GoReleaser
 - Multi-platform binaries (linux/darwin/windows, amd64/arm64)
 
-[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.3.10...v1.4.0
