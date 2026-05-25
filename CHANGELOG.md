@@ -179,7 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Synchronized release with terraform-turingpi-modules v1.3.3
 
-## [1.3.2] - 2025-01-18
+## [1.3.2] - 2026-01-18
 
 ### Changed
 - **Dependencies**
