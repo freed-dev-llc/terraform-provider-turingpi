@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Helm integration migrated to Helm v4**: `github.com/mittwald/go-helm-client` bumped 0.12.19 → 0.13.1, which switched its Helm dependency from v3 to v4. `provider/helm_client.go` moved to the v4 API (`pkg/repo/v1`, `pkg/release/v1`, release status constants from `pkg/release/common`, and `ChartSpec.WaitStrategy` / `RollbackOnFailure` replacing the removed `Wait` / `Atomic` bools). `helm.sh/helm/v3` dropped from `go.mod` (#107).
+
+### Fixed
+
+- **`docs/resources/k3s_cluster.md`**: the `metallb` and `ingress` `enabled` arguments were documented as defaulting to `false`, but both schemas default to `true` - the components deploy by default (#108).
+
+### Dependencies
+
+- ci: bump codecov/codecov-action from 5.5.2 to 7.0.0 (#102)
+- ci: bump github/codeql-action from 4.35.5 to 4.36.2 (#97, #101, #103)
+- ci: bump aquasecurity/trivy-action from 0.35.0 to 0.36.0 (#99)
+- ci: bump golangci/golangci-lint-action from 9.2.0 to 9.2.1 (#98)
+- ci: bump goreleaser/goreleaser-action from 7.0.0 to 7.2.2 (#100)
+
+### CI
+
+- Drive release notes from `CHANGELOG.md` (#89).
+- Dependabot auto-merge via the org reusable workflow and `DEPENDABOT_AUTOMERGE_TOKEN` (#93, #94).
+
+### Documentation
+
+- `README.md`: required Go version 1.25 → 1.26 (matches `go.mod`) (#108).
+- `TODO.md`: updated for v1.5.1; OpenTofu Registry marked live (#91).
+
 ## [1.5.1] - 2026-05-24
 
 ### Fixed
