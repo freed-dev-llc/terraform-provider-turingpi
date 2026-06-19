@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"helm.sh/helm/v3/pkg/release"
+	relcommon "helm.sh/helm/v4/pkg/release/common"
+	release "helm.sh/helm/v4/pkg/release/v1"
 )
 
 // MockHelmClient implements HelmClient for testing
@@ -51,7 +52,7 @@ func (m *MockHelmClient) InstallOrUpgradeChart(ctx context.Context, spec *ChartS
 	return &release.Release{
 		Name: spec.ReleaseName,
 		Info: &release.Info{
-			Status: release.StatusDeployed,
+			Status: relcommon.StatusDeployed,
 		},
 		Version: 1,
 	}, nil
@@ -73,7 +74,7 @@ func (m *MockHelmClient) GetRelease(name string) (*release.Release, error) {
 	return &release.Release{
 		Name: name,
 		Info: &release.Info{
-			Status: release.StatusDeployed,
+			Status: relcommon.StatusDeployed,
 		},
 		Version: 1,
 	}, nil
@@ -176,7 +177,7 @@ func TestMockHelmClient_InstallOrUpgradeChart(t *testing.T) {
 	if rel.Name != "metallb" {
 		t.Errorf("expected release name 'metallb', got %q", rel.Name)
 	}
-	if rel.Info.Status != release.StatusDeployed {
+	if rel.Info.Status != relcommon.StatusDeployed {
 		t.Errorf("expected status Deployed, got %v", rel.Info.Status)
 	}
 
@@ -197,7 +198,7 @@ func TestMockHelmClient_InstallOrUpgradeChart_CustomReturn(t *testing.T) {
 				Name:    spec.ReleaseName,
 				Version: 5,
 				Info: &release.Info{
-					Status:      release.StatusDeployed,
+					Status:      relcommon.StatusDeployed,
 					Description: "Custom install",
 				},
 			}, nil
@@ -286,8 +287,8 @@ func TestMockHelmClient_ListReleases(t *testing.T) {
 	mock := &MockHelmClient{
 		ListReleasesFunc: func() ([]*release.Release, error) {
 			return []*release.Release{
-				{Name: "release1", Info: &release.Info{Status: release.StatusDeployed}},
-				{Name: "release2", Info: &release.Info{Status: release.StatusDeployed}},
+				{Name: "release1", Info: &release.Info{Status: relcommon.StatusDeployed}},
+				{Name: "release2", Info: &release.Info{Status: relcommon.StatusDeployed}},
 			}, nil
 		},
 	}
@@ -408,7 +409,7 @@ func TestWaitForHelmReleaseWithClient_Success(t *testing.T) {
 			return &release.Release{
 				Name: name,
 				Info: &release.Info{
-					Status: release.StatusDeployed,
+					Status: relcommon.StatusDeployed,
 				},
 			}, nil
 		},
@@ -430,14 +431,14 @@ func TestWaitForHelmReleaseWithClient_PendingThenDeployed(t *testing.T) {
 				return &release.Release{
 					Name: name,
 					Info: &release.Info{
-						Status: release.StatusPendingInstall,
+						Status: relcommon.StatusPendingInstall,
 					},
 				}, nil
 			}
 			return &release.Release{
 				Name: name,
 				Info: &release.Info{
-					Status: release.StatusDeployed,
+					Status: relcommon.StatusDeployed,
 				},
 			}, nil
 		},
@@ -460,7 +461,7 @@ func TestWaitForHelmReleaseWithClient_Failed(t *testing.T) {
 			return &release.Release{
 				Name: name,
 				Info: &release.Info{
-					Status:      release.StatusFailed,
+					Status:      relcommon.StatusFailed,
 					Description: "install failed",
 				},
 			}, nil

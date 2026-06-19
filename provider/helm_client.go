@@ -7,8 +7,10 @@ import (
 	"time"
 
 	helmclient "github.com/mittwald/go-helm-client"
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/repo"
+	"helm.sh/helm/v4/pkg/kube"
+	relcommon "helm.sh/helm/v4/pkg/release/common"
+	release "helm.sh/helm/v4/pkg/release/v1"
+	repo "helm.sh/helm/v4/pkg/repo/v1"
 )
 
 // HelmClient interface for Helm operations - allows mocking in tests
@@ -108,16 +110,20 @@ func (c *RealHelmClient) InstallOrUpgradeChart(ctx context.Context, spec *ChartS
 	}
 
 	chartSpec := helmclient.ChartSpec{
-		ReleaseName:     spec.ReleaseName,
-		ChartName:       spec.ChartName,
-		Namespace:       spec.Namespace,
-		Version:         spec.Version,
-		ValuesYaml:      spec.ValuesYaml,
-		CreateNamespace: spec.CreateNamespace,
-		Wait:            spec.Wait,
-		Timeout:         spec.Timeout,
-		Atomic:          spec.Atomic,
-		CleanupOnFail:   spec.Atomic, // Clean up on failure if atomic
+		ReleaseName:       spec.ReleaseName,
+		ChartName:         spec.ChartName,
+		Namespace:         spec.Namespace,
+		Version:           spec.Version,
+		ValuesYaml:        spec.ValuesYaml,
+		CreateNamespace:   spec.CreateNamespace,
+		Timeout:           spec.Timeout,
+		RollbackOnFailure: spec.Atomic,
+		CleanupOnFail:     spec.Atomic, // Clean up on failure if atomic
+	}
+	if spec.Wait {
+		// helm v4 replaced the bool Wait with a strategy; "watcher" is the
+		// modern equivalent of waiting for resources to become ready.
+		chartSpec.WaitStrategy = kube.StatusWatcherStrategy
 	}
 
 	rel, err := c.client.InstallOrUpgradeChart(ctx, &chartSpec, nil)
@@ -218,11 +224,11 @@ func WaitForHelmReleaseWithClient(client HelmClient, name string, timeout time.D
 		}
 
 		switch rel.Info.Status {
-		case release.StatusDeployed:
+		case relcommon.StatusDeployed:
 			return nil
-		case release.StatusFailed:
+		case relcommon.StatusFailed:
 			return fmt.Errorf("release %s failed: %s", name, rel.Info.Description)
-		case release.StatusPendingInstall, release.StatusPendingUpgrade, release.StatusPendingRollback:
+		case relcommon.StatusPendingInstall, relcommon.StatusPendingUpgrade, relcommon.StatusPendingRollback:
 			// Still in progress, keep waiting
 		default:
 			// Unknown status, keep waiting
