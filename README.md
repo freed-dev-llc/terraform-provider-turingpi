@@ -369,7 +369,7 @@ See the [examples](./examples) directory for complete configurations:
 
 ## Development
 
-Requires [Go 1.25+](https://go.dev/).
+Requires [Go 1.26+](https://go.dev/).
 
 ```bash
 # Clone and build
