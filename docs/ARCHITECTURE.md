@@ -153,8 +153,8 @@ graph LR
     subgraph "provider/helpers.go"
         PowerOn[turnOnNode]
         PowerOff[turnOffNode]
-        FlashFW[initFlash]
-        CheckBoot[waitForBootCompletion]
+        FlashFW[flashNode]
+        CheckBoot[checkBootStatus]
         CheckPower[checkPowerStatus]
     end
 
@@ -395,8 +395,9 @@ sequenceDiagram
 |----------|--------|---------|------|
 | `/api/bmc/authenticate` | POST | Get bearer token | None |
 | `/api/bmc?opt=get&type=uart&node={id}` | GET | Read UART output | Bearer |
-| `/api/bmc?opt=set&type=power&node={id}&mode={0\|1}` | GET | Power control | Bearer |
-| `/api/bmc?opt=set&type=flash&node={id}` | POST | Flash firmware | Bearer |
+| `/api/bmc?opt=set&type=power&node{id}={0\|1}` | GET | Power control (1-indexed node, e.g. `node1=1`) | Bearer |
+| `/api/bmc?opt=set&type=flash&node={id}&file={url}` | GET | Initiate flash (0-indexed node) | Bearer |
+| `/api/bmc/upload/{handle}` | POST | Upload firmware body (streaming flash only) | Bearer |
 
 ---
 

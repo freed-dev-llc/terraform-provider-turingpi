@@ -10,26 +10,34 @@ import (
 
 // Note: Uses HTTPClient from provider.go for TLS configuration
 
-func checkPowerStatus(node int) string {
-	// Simulate checking power status
-	fmt.Printf("Checking power status for node %d\n", node)
-	// Replace this with an actual API call
-	return "off"
+// checkPowerStatus returns "on" or "off" for the given 1-indexed node by
+// querying the BMC power endpoint.
+func checkPowerStatus(endpoint, token string, node int) (string, error) {
+	status, err := getPowerStatus(endpoint, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to read power status for node %d: %w", node, err)
+	}
+	if parsePowerStatus(status)[fmt.Sprintf("node%d", node)] {
+		return "on", nil
+	}
+	return "off", nil
 }
 
-func turnOffNode(node int) {
-	fmt.Printf("Turning off node %d\n", node)
-	// Replace this with an API call to turn off the node
+// turnOffNode powers off the given 1-indexed node via the BMC.
+func turnOffNode(endpoint, token string, node int) error {
+	return setNodePower(endpoint, token, node, false)
 }
 
-func turnOnNode(node int) {
-	fmt.Printf("Turning on node %d\n", node)
-	// Replace this with an API call to turn on the node
+// turnOnNode powers on the given 1-indexed node via the BMC.
+func turnOnNode(endpoint, token string, node int) error {
+	return setNodePower(endpoint, token, node, true)
 }
 
-func flashNode(node int, firmware string) {
-	fmt.Printf("Flashing node %d with firmware %s\n", node, firmware)
-	// Replace this with an API call to flash the firmware
+// flashNode flashes a local firmware image to the given 1-indexed node via the
+// BMC streaming-upload path. See flashFirmwareFile for the known firmware
+// limitation (issue #63).
+func flashNode(endpoint, token string, node int, firmware string) error {
+	return flashFirmwareFile(endpoint, token, node, node-1, firmware)
 }
 
 func checkBootStatus(endpoint string, node int, timeout int, token string, pattern string) (bool, error) {

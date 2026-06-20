@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -9,61 +10,83 @@ import (
 )
 
 func TestCheckPowerStatus(t *testing.T) {
-	// Current implementation is a stub that always returns "off"
-	result := checkPowerStatus(1)
-	if result != "off" {
-		t.Errorf("expected 'off', got %s", result)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := map[string]interface{}{
+			"response": [][]interface{}{
+				{"node1", float64(1)},
+				{"node2", float64(0)},
+			},
+		}
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	if state, err := checkPowerStatus(server.URL, "token", 1); err != nil {
+		t.Fatalf("node1: unexpected error: %s", err)
+	} else if state != "on" {
+		t.Errorf("node1: expected 'on', got %s", state)
+	}
+
+	if state, err := checkPowerStatus(server.URL, "token", 2); err != nil {
+		t.Fatalf("node2: unexpected error: %s", err)
+	} else if state != "off" {
+		t.Errorf("node2: expected 'off', got %s", state)
 	}
 }
 
-func TestCheckPowerStatus_DifferentNodes(t *testing.T) {
-	nodes := []int{1, 2, 3, 4}
-	for _, node := range nodes {
-		result := checkPowerStatus(node)
-		if result != "off" {
-			t.Errorf("node %d: expected 'off', got %s", node, result)
-		}
+func TestCheckPowerStatus_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	if _, err := checkPowerStatus(server.URL, "token", 1); err == nil {
+		t.Fatal("expected error when BMC returns 500, got nil")
 	}
 }
 
-func TestTurnOnNode_DoesNotPanic(t *testing.T) {
-	// Current implementation is a stub, just verify it doesn't panic
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("turnOnNode panicked: %v", r)
-		}
-	}()
+func TestTurnOnNode(t *testing.T) {
+	var capturedURL string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedURL = r.URL.String()
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
 
-	turnOnNode(1)
-	turnOnNode(2)
-	turnOnNode(3)
-	turnOnNode(4)
+	if err := turnOnNode(server.URL, "token", 1); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if !strings.Contains(capturedURL, "node1=1") {
+		t.Errorf("expected power-on URL to contain 'node1=1', got %s", capturedURL)
+	}
 }
 
-func TestTurnOffNode_DoesNotPanic(t *testing.T) {
-	// Current implementation is a stub, just verify it doesn't panic
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("turnOffNode panicked: %v", r)
-		}
-	}()
+func TestTurnOffNode(t *testing.T) {
+	var capturedURL string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedURL = r.URL.String()
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
 
-	turnOffNode(1)
-	turnOffNode(2)
-	turnOffNode(3)
-	turnOffNode(4)
+	if err := turnOffNode(server.URL, "token", 2); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if !strings.Contains(capturedURL, "node2=0") {
+		t.Errorf("expected power-off URL to contain 'node2=0', got %s", capturedURL)
+	}
 }
 
-func TestFlashNode_DoesNotPanic(t *testing.T) {
-	// Current implementation is a stub, just verify it doesn't panic
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("flashNode panicked: %v", r)
-		}
-	}()
-
-	flashNode(1, "/path/to/firmware.img")
-	flashNode(2, "/another/firmware.bin")
+func TestFlashNode_FileNotFound(t *testing.T) {
+	// flashNode opens the firmware file before contacting the BMC, so a missing
+	// file surfaces as an error without any network call.
+	err := flashNode("https://test.local", "token", 1, "/nonexistent/firmware.img")
+	if err == nil {
+		t.Fatal("expected error for missing firmware file, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to open firmware file") {
+		t.Errorf("expected file-open error, got: %s", err)
+	}
 }
 
 func TestCheckBootStatus_Success(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceNode() *schema.Resource {
@@ -16,9 +17,10 @@ func resourceNode() *schema.Resource {
 		DeleteContext: resourceNodeDelete,
 		Schema: map[string]*schema.Schema{
 			"node": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Node ID to manage",
+				Type:             schema.TypeInt,
+				Required:         true,
+				Description:      "Node ID to manage (1-4)",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
 			},
 			"firmware_file": {
 				Type:        schema.TypeString,
@@ -26,10 +28,11 @@ func resourceNode() *schema.Resource {
 				Description: "Path to the firmware file (required for flashing)",
 			},
 			"power_state": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "on",
-				Description: "Desired power state of the node (on/off)",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "on",
+				Description:      "Desired power state of the node (on/off)",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"on", "off"}, false)),
 			},
 			"boot_check": {
 				Type:        schema.TypeBool,
@@ -62,16 +65,23 @@ func resourceNodeProvision(_ context.Context, d *schema.ResourceData, meta inter
 	timeout := d.Get("login_prompt_timeout").(int)
 	bootCheckPattern := d.Get("boot_check_pattern").(string)
 
-	// Step 1: Turn on the node
-	if powerState == "on" {
-		turnOnNode(node)
-	} else {
-		turnOffNode(node)
+	// Step 1: Flash firmware if provided. Flashing powers the node off, so it
+	// must run before we apply the desired power state below.
+	if firmware != "" {
+		if err := flashNode(config.Endpoint, config.Token, node, firmware); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to flash node %d: %w", node, err))
+		}
 	}
 
-	// Step 2: Flash firmware if provided
-	if firmware != "" {
-		flashNode(node, firmware)
+	// Step 2: Apply the desired power state.
+	var err error
+	if powerState == "on" {
+		err = turnOnNode(config.Endpoint, config.Token, node)
+	} else {
+		err = turnOffNode(config.Endpoint, config.Token, node)
+	}
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("failed to set power state for node %d: %w", node, err))
 	}
 
 	// Step 3: Boot check
@@ -91,8 +101,13 @@ func resourceNodeProvision(_ context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceNodeStatus(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	config := meta.(*ProviderConfig)
 	node := d.Get("node").(int)
-	currentPower := checkPowerStatus(node)
+
+	currentPower, err := checkPowerStatus(config.Endpoint, config.Token, node)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := d.Set("power_state", currentPower); err != nil {
 		return diag.FromErr(fmt.Errorf("failed to set power_state: %v", err))
@@ -101,7 +116,10 @@ func resourceNodeStatus(_ context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceNodeDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	config := meta.(*ProviderConfig)
 	node := d.Get("node").(int)
-	turnOffNode(node)
+	if err := turnOffNode(config.Endpoint, config.Token, node); err != nil {
+		return diag.FromErr(fmt.Errorf("failed to power off node %d on delete: %w", node, err))
+	}
 	return nil
 }
