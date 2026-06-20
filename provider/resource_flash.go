@@ -128,55 +128,69 @@ func resourceFlashCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	firmwarePath := d.Get("firmware_file").(string)
 
+	if err := flashFirmwareFile(ctx, config.Endpoint, config.Token, node, apiNode, firmwarePath); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(fmt.Sprintf("flash-node-%d", node))
+	return nil
+}
+
+// flashFirmwareFile streams a local firmware image to a node over the BMC's
+// multipart upload path (the firmware_file path): power off, initiate, upload,
+// then poll until Done. node is 1-indexed; apiNode is the 0-indexed value the
+// flash API expects. Known broken on current BMC firmware (issue #63): the BMC
+// reports Done before the eMMC write completes, so prefer the URL-based flash.
+func flashFirmwareFile(ctx context.Context, endpoint, token string, node, apiNode int, firmwarePath string) error {
 	// Open the firmware file
 	file, err := os.Open(firmwarePath)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("failed to open firmware file: %w", err))
+		return fmt.Errorf("failed to open firmware file: %w", err)
 	}
 	defer func() { _ = file.Close() }()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("failed to stat firmware file: %w", err))
+		return fmt.Errorf("failed to stat firmware file: %w", err)
 	}
 	fileSize := fileInfo.Size()
 
 	fmt.Printf("Flashing node %d with firmware %s (%d bytes)\n", node, firmwarePath, fileSize)
 
 	// Step 1: Power off the node before flashing
-	if err := setNodePower(config.Endpoint, config.Token, node, false); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to power off node before flash: %w", err))
+	if err := setNodePower(endpoint, token, node, false); err != nil {
+		return fmt.Errorf("failed to power off node before flash: %w", err)
 	}
 	time.Sleep(2 * time.Second) // Wait for node to power off
 
 	// Step 2: Initiate flash operation
 	// file=stream indicates we'll upload via streaming, not from local SD card
-	initURL := fmt.Sprintf("%s/api/bmc?opt=set&type=flash&node=%d&file=stream&length=%d", config.Endpoint, apiNode, fileSize)
+	initURL := fmt.Sprintf("%s/api/bmc?opt=set&type=flash&node=%d&file=stream&length=%d", endpoint, apiNode, fileSize)
 
-	req, err := http.NewRequest("GET", initURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", initURL, nil)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("failed to create flash request: %w", err))
+		return fmt.Errorf("failed to create flash request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+config.Token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("flash initiation failed: %w", err))
+		return fmt.Errorf("flash initiation failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return diag.Errorf("flash initiation failed with status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("flash initiation failed with status %d: %s", resp.StatusCode, string(body))
 	}
 
 	var flashResp flashResponse
 	if err := json.NewDecoder(resp.Body).Decode(&flashResp); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode flash response: %w", err))
+		return fmt.Errorf("failed to decode flash response: %w", err)
 	}
 
 	if flashResp.Handle == nil {
-		return diag.Errorf("no upload handle returned from BMC")
+		return fmt.Errorf("no upload handle returned from BMC")
 	}
 
 	// Handle can be string or number
@@ -194,24 +208,23 @@ func resourceFlashCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Step 3: Upload the firmware file as a raw streaming POST.
 	fmt.Printf("Uploading firmware to BMC (%d bytes)...\n", fileSize)
-	if err := uploadFlashStream(config.Endpoint, config.Token, handleStr, file, fileSize); err != nil {
-		return diag.FromErr(err)
+	if err := uploadFlashStream(ctx, endpoint, token, handleStr, file, fileSize); err != nil {
+		return err
 	}
 
 	fmt.Printf("Upload complete, waiting for flash to finish...\n")
 
-	if err := pollFlashUntilDone(config.Endpoint, config.Token, 25*time.Minute); err != nil {
-		return diag.FromErr(err)
+	if err := pollFlashUntilDone(ctx, endpoint, token, 25*time.Minute); err != nil {
+		return err
 	}
 	fmt.Printf("Flash completed successfully\n")
-	d.SetId(fmt.Sprintf("flash-node-%d", node))
 	return nil
 }
 
 // resourceFlashFromURL drives the BMC's URL-based flash path: the BMC pulls
 // the firmware directly and only reports Done after the eMMC write actually
 // completes. This avoids the streaming-flash Done-too-early bug (issue #63).
-func resourceFlashFromURL(_ context.Context, d *schema.ResourceData, config *ProviderConfig, node, apiNode int, firmwareURL string) diag.Diagnostics {
+func resourceFlashFromURL(ctx context.Context, d *schema.ResourceData, config *ProviderConfig, node, apiNode int, firmwareURL string) diag.Diagnostics {
 	fmt.Printf("Flashing node %d from URL %s\n", node, firmwareURL)
 
 	// Power off the node before flashing
@@ -223,7 +236,7 @@ func resourceFlashFromURL(_ context.Context, d *schema.ResourceData, config *Pro
 	// The BMC pulls firmwareURL itself; we just kick it off and poll.
 	initURL := buildURLFlashInit(config.Endpoint, apiNode, firmwareURL)
 
-	req, err := http.NewRequest("GET", initURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", initURL, nil)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to create URL-flash request: %w", err))
 	}
@@ -243,7 +256,7 @@ func resourceFlashFromURL(_ context.Context, d *schema.ResourceData, config *Pro
 
 	fmt.Printf("BMC is pulling firmware from %s, waiting for flash to finish...\n", firmwareURL)
 
-	if err := pollFlashUntilDone(config.Endpoint, config.Token, 25*time.Minute); err != nil {
+	if err := pollFlashUntilDone(ctx, config.Endpoint, config.Token, 25*time.Minute); err != nil {
 		return diag.FromErr(err)
 	}
 	fmt.Printf("Flash completed successfully\n")
@@ -261,17 +274,19 @@ func buildURLFlashInit(endpoint string, apiNode int, firmwareURL string) string 
 
 // pollFlashUntilDone polls /api/bmc?opt=get&type=flash every 5s until the BMC
 // reports Done or Error, or the timeout fires.
-func pollFlashUntilDone(endpoint, token string, timeout time.Duration) error {
+func pollFlashUntilDone(ctx context.Context, endpoint, token string, timeout time.Duration) error {
 	deadline := time.After(timeout)
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return ctx.Err()
 		case <-deadline:
 			return fmt.Errorf("flash operation timed out after %s", timeout)
 		case <-ticker.C:
-			status, err := getFlashStatus(endpoint, token)
+			status, err := getFlashStatus(ctx, endpoint, token)
 			if err != nil {
 				fmt.Printf("Warning: failed to get flash status: %v\n", err)
 				continue
@@ -308,7 +323,7 @@ func pollFlashUntilDone(endpoint, token string, timeout time.Duration) error {
 // rejects (see issue #46) -- the multipart prologue and epilogue are
 // pre-built so the request can be sent with an explicit Content-Length and
 // the file body streamed in between.
-func uploadFlashStream(endpoint, token, handle string, file *os.File, fileSize int64) error {
+func uploadFlashStream(ctx context.Context, endpoint, token, handle string, file *os.File, fileSize int64) error {
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
 		return fmt.Errorf("failed to seek firmware file: %w", err)
 	}
@@ -339,7 +354,7 @@ func uploadFlashStream(endpoint, token, handle string, file *os.File, fileSize i
 	body := io.MultiReader(bytes.NewReader(prologueBytes), file, bytes.NewReader(epilogueBytes))
 
 	uploadURL := fmt.Sprintf("%s/api/bmc/upload/%s", endpoint, handle)
-	req, err := http.NewRequest("POST", uploadURL, body)
+	req, err := http.NewRequestWithContext(ctx, "POST", uploadURL, body)
 	if err != nil {
 		return fmt.Errorf("failed to create upload request: %w", err)
 	}
@@ -361,10 +376,10 @@ func uploadFlashStream(endpoint, token, handle string, file *os.File, fileSize i
 	return nil
 }
 
-func getFlashStatus(endpoint, token string) (*flashStatusResponse, error) {
+func getFlashStatus(ctx context.Context, endpoint, token string) (*flashStatusResponse, error) {
 	url := fmt.Sprintf("%s/api/bmc?opt=get&type=flash", endpoint)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

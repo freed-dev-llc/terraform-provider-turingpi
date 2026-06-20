@@ -106,7 +106,7 @@ output "node_status" {
 
 - `node` - (Required, Integer) The node ID (1-4).
 - `power_state` - (Optional, String) The desired power state. Valid values are `"on"` or `"off"`. Defaults to `"on"`.
-- `firmware_file` - (Optional, String) Path to the firmware image file. If specified, firmware will be flashed to the node.
+- `firmware_file` - (Optional, String) Path to the firmware image file. If specified, the image is streamed to the node before the power state is applied. Note: this uses the BMC's streaming-upload flash path, which is known broken on current BMC firmware (the BMC reports completion before the eMMC write finishes - issue #63). For reliable flashing, use the [`turingpi_flash`](flash.md) resource with `firmware_url`, which has the BMC pull the image itself.
 - `boot_check` - (Optional, Boolean) Whether to monitor UART output to verify successful boot. Defaults to `false`.
 - `boot_check_pattern` - (Optional, String) The pattern to search for in UART output to confirm successful boot. Defaults to `"login:"`. Use `"machine is running and ready"` for Talos Linux.
 - `login_prompt_timeout` - (Optional, Integer) Timeout in seconds to wait for boot pattern when `boot_check` is enabled. Defaults to `60`.
@@ -137,8 +137,4 @@ The `login_prompt_timeout` controls how long to wait for the boot to complete. I
 
 ## Import
 
-Node resources can be imported using the node ID:
-
-```shell
-terraform import turingpi_node.node1 1
-```
+This resource does not support `terraform import`.

@@ -2,12 +2,34 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// newPowerMockServer returns a test BMC that accepts power set/get requests so
+// resource_node CRUD paths (which now make real BMC calls) can run offline.
+func newPowerMockServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// type=get power returns a status payload; set requests just need 200.
+		if r.URL.Query().Get("opt") == "get" {
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"response": [][]interface{}{
+					{"node1", float64(1)},
+					{"node2", float64(0)},
+					{"node3", float64(0)},
+					{"node4", float64(0)},
+				},
+			})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+}
 
 func TestResourceNode(t *testing.T) {
 	r := resourceNode()
@@ -130,6 +152,9 @@ func TestResourceNode_HasCRUDFunctions(t *testing.T) {
 }
 
 func TestResourceNodeProvision_SetsId(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
 	d := r.TestResourceData()
 
@@ -139,10 +164,10 @@ func TestResourceNodeProvision_SetsId(t *testing.T) {
 
 	config := &ProviderConfig{
 		Token:    "test-token",
-		Endpoint: "https://test.local",
+		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
@@ -154,6 +179,9 @@ func TestResourceNodeProvision_SetsId(t *testing.T) {
 }
 
 func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
 
 	testCases := []struct {
@@ -168,7 +196,7 @@ func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
 
 	config := &ProviderConfig{
 		Token:    "test-token",
-		Endpoint: "https://test.local",
+		Endpoint: server.URL,
 	}
 
 	for _, tc := range testCases {
@@ -178,7 +206,7 @@ func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
 			_ = d.Set("power_state", "on")
 			_ = d.Set("boot_check", false)
 
-			diags := resourceNodeProvision(context.Background(), d, config)
+			diags := resourceNodeCreate(context.Background(), d, config)
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %s", diags[0].Summary)
 			}
@@ -191,6 +219,9 @@ func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
 }
 
 func TestResourceNodeProvision_PowerStateOn(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
 	d := r.TestResourceData()
 
@@ -200,16 +231,19 @@ func TestResourceNodeProvision_PowerStateOn(t *testing.T) {
 
 	config := &ProviderConfig{
 		Token:    "test-token",
-		Endpoint: "https://test.local",
+		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
 func TestResourceNodeProvision_PowerStateOff(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
 	d := r.TestResourceData()
 
@@ -219,21 +253,21 @@ func TestResourceNodeProvision_PowerStateOff(t *testing.T) {
 
 	config := &ProviderConfig{
 		Token:    "test-token",
-		Endpoint: "https://test.local",
+		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
-func TestResourceNodeProvision_WithFirmware(t *testing.T) {
+func TestResourceNodeProvision_FirmwareFileNotFound(t *testing.T) {
 	r := resourceNode()
 	d := r.TestResourceData()
 
 	_ = d.Set("node", 1)
-	_ = d.Set("firmware_file", "/path/to/firmware.img")
+	_ = d.Set("firmware_file", "/nonexistent/firmware.img")
 	_ = d.Set("power_state", "on")
 	_ = d.Set("boot_check", false)
 
@@ -242,9 +276,11 @@ func TestResourceNodeProvision_WithFirmware(t *testing.T) {
 		Endpoint: "https://test.local",
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
-	if diags.HasError() {
-		t.Fatalf("unexpected error: %s", diags[0].Summary)
+	// Providing firmware_file now triggers a real flash attempt, so a missing
+	// file must surface as an error rather than silently succeeding.
+	diags := resourceNodeCreate(context.Background(), d, config)
+	if !diags.HasError() {
+		t.Fatal("expected error for missing firmware file, got nil")
 	}
 }
 
@@ -270,7 +306,7 @@ func TestResourceNodeProvision_WithBootCheck(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
@@ -298,7 +334,7 @@ func TestResourceNodeProvision_BootCheckTimeout(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if !diags.HasError() {
 		t.Fatal("expected error for boot check timeout, got nil")
 	}
@@ -326,46 +362,58 @@ func TestResourceNodeProvision_CustomBootCheckPattern(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
 func TestResourceNodeStatus_SetsPowerState(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
 	d := r.TestResourceData()
 
 	_ = d.Set("node", 1)
 	d.SetId("node-1")
 
-	diags := resourceNodeStatus(context.Background(), d, nil)
+	config := &ProviderConfig{Token: "test-token", Endpoint: server.URL}
+	diags := resourceNodeStatus(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 
-	// checkPowerStatus currently returns "off"
+	// Mock reports node1 powered on.
 	powerState := d.Get("power_state").(string)
-	if powerState != "off" {
-		t.Errorf("expected power_state 'off', got %s", powerState)
+	if powerState != "on" {
+		t.Errorf("expected power_state 'on', got %s", powerState)
 	}
 }
 
 func TestResourceNodeDelete_TurnsOffNode(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
 	d := r.TestResourceData()
 
 	_ = d.Set("node", 1)
 	d.SetId("node-1")
 
-	diags := resourceNodeDelete(context.Background(), d, nil)
+	config := &ProviderConfig{Token: "test-token", Endpoint: server.URL}
+	diags := resourceNodeDelete(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
 }
 
 func TestResourceNodeDelete_DifferentNodes(t *testing.T) {
+	server := newPowerMockServer(t)
+	defer server.Close()
+
 	r := resourceNode()
+	config := &ProviderConfig{Token: "test-token", Endpoint: server.URL}
 
 	nodes := []int{1, 2, 3, 4}
 
@@ -375,7 +423,7 @@ func TestResourceNodeDelete_DifferentNodes(t *testing.T) {
 			_ = d.Set("node", node)
 			d.SetId("node-" + string(rune('0'+node)))
 
-			diags := resourceNodeDelete(context.Background(), d, nil)
+			diags := resourceNodeDelete(context.Background(), d, config)
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %s", diags[0].Summary)
 			}

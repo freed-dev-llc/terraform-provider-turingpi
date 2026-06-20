@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,35 +11,47 @@ import (
 
 // Note: Uses HTTPClient from provider.go for TLS configuration
 
-func checkPowerStatus(node int) string {
-	// Simulate checking power status
-	fmt.Printf("Checking power status for node %d\n", node)
-	// Replace this with an actual API call
-	return "off"
+// checkPowerStatus returns "on" or "off" for the given 1-indexed node by
+// querying the BMC power endpoint.
+func checkPowerStatus(endpoint, token string, node int) (string, error) {
+	status, err := getPowerStatus(endpoint, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to read power status for node %d: %w", node, err)
+	}
+	if parsePowerStatus(status)[fmt.Sprintf("node%d", node)] {
+		return "on", nil
+	}
+	return "off", nil
 }
 
-func turnOffNode(node int) {
-	fmt.Printf("Turning off node %d\n", node)
-	// Replace this with an API call to turn off the node
+// turnOffNode powers off the given 1-indexed node via the BMC.
+func turnOffNode(endpoint, token string, node int) error {
+	return setNodePower(endpoint, token, node, false)
 }
 
-func turnOnNode(node int) {
-	fmt.Printf("Turning on node %d\n", node)
-	// Replace this with an API call to turn on the node
+// turnOnNode powers on the given 1-indexed node via the BMC.
+func turnOnNode(endpoint, token string, node int) error {
+	return setNodePower(endpoint, token, node, true)
 }
 
-func flashNode(node int, firmware string) {
-	fmt.Printf("Flashing node %d with firmware %s\n", node, firmware)
-	// Replace this with an API call to flash the firmware
+// flashNode flashes a local firmware image to the given 1-indexed node via the
+// BMC streaming-upload path. See flashFirmwareFile for the known firmware
+// limitation (issue #63).
+func flashNode(ctx context.Context, endpoint, token string, node int, firmware string) error {
+	return flashFirmwareFile(ctx, endpoint, token, node, node-1, firmware)
 }
 
-func checkBootStatus(endpoint string, node int, timeout int, token string, pattern string) (bool, error) {
+func checkBootStatus(ctx context.Context, endpoint string, node int, timeout int, token string, pattern string) (bool, error) {
 	url := fmt.Sprintf("%s/api/bmc?opt=get&type=uart&node=%d", endpoint, node)
 
 	deadline := time.Now().Add(time.Duration(timeout) * time.Second)
 
 	for time.Now().Before(deadline) {
-		req, err := http.NewRequest("GET", url, nil)
+		if err := ctx.Err(); err != nil {
+			return false, err
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 		if err != nil {
 			return false, fmt.Errorf("failed to create UART request: %v", err)
 		}
@@ -61,7 +74,11 @@ func checkBootStatus(endpoint string, node int, timeout int, token string, patte
 			return true, nil
 		}
 
-		time.Sleep(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		case <-time.After(5 * time.Second):
+		}
 	}
 
 	return false, fmt.Errorf("timeout reached: node %d did not boot successfully (pattern %q not found)", node, pattern)

@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`turingpi_node`: power control, firmware flashing, and power-status reads were no-op stubs.** `turnOnNode`/`turnOffNode`/`flashNode`/`checkPowerStatus` only logged and never called the BMC, so `power_state` and `firmware_file` did nothing and the resource reported `power_state = "off"` on every refresh (perpetual drift). They are now wired to the real BMC API: power on/off via the power endpoint, streaming flash for `firmware_file` (shared with `turingpi_flash`), and live power-status reads. Flashing now runs before the desired power state is applied (flashing powers the node off), and `node` is validated to 1-4 / `power_state` to `on`/`off`.
+- **`turingpi_node`: lifecycle correctness now that those operations are real.** `firmware_file` only re-flashes when it actually changes (Create always flashes when set; Update guards on a change) instead of re-imaging the eMMC on every unrelated edit; `node` is `ForceNew` so re-targeting a different physical node recreates rather than silently flashing the wrong slot; the resource ID is set before the optional `boot_check` so a boot-check failure leaves a tracked (tainted) resource instead of an untracked node that re-flashes from scratch on retry; a `Timeouts` block (Create/Update 30m) plus `context` threaded through the flash and boot-check poll loops make long flashes tunable and cancellable (Ctrl-C / `terraform` stop now honored); and `firmware_file` emits a `tflog.Warn` about the known-broken streaming path (issue #63).
+- **`docs/resources/talos_cluster.md`**: the `metallb` and `ingress` `enabled` arguments were documented as defaulting to `false`, but both shared schemas default to `true` - the components deploy by default.
+- **`docs/resources/node.md`**: removed the Import section - `turingpi_node` registers no importer, so `terraform import` always failed.
+- **`docs/ARCHITECTURE.md`**: corrected the power endpoint format (`node{id}={0|1}`, not a separate `mode` param), the flash-init method (GET, not POST), and stale helper names in the component diagram (`flashNode` / `checkBootStatus`).
 - **`docs/resources/k3s_cluster.md`**: the `metallb` and `ingress` `enabled` arguments were documented as defaulting to `false`, but both schemas default to `true` - the components deploy by default (#108).
 
 ### Dependencies
@@ -30,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- Documented the `version` argument on the `metallb` and `ingress` blocks of `turingpi_k3s_cluster` and `turingpi_talos_cluster` (Optional chart version, defaults to latest); it was a usable schema field with no docs.
+- `docs/resources/node.md`: noted that `firmware_file` uses the streaming-flash path (known broken on current BMC firmware, issue #63) and to prefer `turingpi_flash` with `firmware_url`.
 - `README.md`: required Go version 1.25 → 1.26 (matches `go.mod`) (#108).
 - `TODO.md`: updated for v1.5.1; OpenTofu Registry marked live (#91).
 

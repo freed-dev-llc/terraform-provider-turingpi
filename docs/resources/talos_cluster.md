@@ -228,17 +228,21 @@ Each node block (`control_plane` or `worker`) accepts the following arguments:
 
 The `metallb` block accepts the following arguments:
 
-- `enabled` - (Optional, Boolean) Whether to deploy MetalLB. Defaults to `false`.
+- `enabled` - (Optional, Boolean) Whether to deploy MetalLB. Defaults to `true`.
 
 - `ip_range` - (Required if enabled, String) The IP address range for MetalLB to allocate (e.g., `"10.10.88.80-10.10.88.89"`).
+
+- `version` - (Optional, String) Chart version to deploy. Defaults to the latest available chart version.
 
 ### Ingress Configuration
 
 The `ingress` block accepts the following arguments:
 
-- `enabled` - (Optional, Boolean) Whether to deploy NGINX Ingress controller. Defaults to `false`.
+- `enabled` - (Optional, Boolean) Whether to deploy NGINX Ingress controller. Defaults to `true`.
 
 - `ip` - (Optional, String) The LoadBalancer IP for the Ingress controller. If not specified and MetalLB is enabled, uses the first IP from the MetalLB range.
+
+- `version` - (Optional, String) Chart version to deploy. Defaults to the latest available chart version.
 
 ## Attribute Reference
 
