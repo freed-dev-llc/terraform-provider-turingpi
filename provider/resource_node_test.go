@@ -167,7 +167,7 @@ func TestResourceNodeProvision_SetsId(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
@@ -206,7 +206,7 @@ func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
 			_ = d.Set("power_state", "on")
 			_ = d.Set("boot_check", false)
 
-			diags := resourceNodeProvision(context.Background(), d, config)
+			diags := resourceNodeCreate(context.Background(), d, config)
 			if diags.HasError() {
 				t.Fatalf("unexpected error: %s", diags[0].Summary)
 			}
@@ -234,7 +234,7 @@ func TestResourceNodeProvision_PowerStateOn(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
@@ -256,7 +256,7 @@ func TestResourceNodeProvision_PowerStateOff(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
@@ -278,7 +278,7 @@ func TestResourceNodeProvision_FirmwareFileNotFound(t *testing.T) {
 
 	// Providing firmware_file now triggers a real flash attempt, so a missing
 	// file must surface as an error rather than silently succeeding.
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if !diags.HasError() {
 		t.Fatal("expected error for missing firmware file, got nil")
 	}
@@ -306,7 +306,7 @@ func TestResourceNodeProvision_WithBootCheck(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
@@ -334,7 +334,7 @@ func TestResourceNodeProvision_BootCheckTimeout(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if !diags.HasError() {
 		t.Fatal("expected error for boot check timeout, got nil")
 	}
@@ -362,7 +362,7 @@ func TestResourceNodeProvision_CustomBootCheckPattern(t *testing.T) {
 		Endpoint: server.URL,
 	}
 
-	diags := resourceNodeProvision(context.Background(), d, config)
+	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}

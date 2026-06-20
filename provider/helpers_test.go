@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -80,7 +81,7 @@ func TestTurnOffNode(t *testing.T) {
 func TestFlashNode_FileNotFound(t *testing.T) {
 	// flashNode opens the firmware file before contacting the BMC, so a missing
 	// file surfaces as an error without any network call.
-	err := flashNode("https://test.local", "token", 1, "/nonexistent/firmware.img")
+	err := flashNode(context.Background(), "https://test.local", "token", 1, "/nonexistent/firmware.img")
 	if err == nil {
 		t.Fatal("expected error for missing firmware file, got nil")
 	}
@@ -117,7 +118,7 @@ func TestCheckBootStatus_Success(t *testing.T) {
 	defer server.Close()
 
 	// Use short timeout since mock server returns immediately
-	success, err := checkBootStatus(server.URL, 1, 1, "test-token", "login:")
+	success, err := checkBootStatus(context.Background(), server.URL, 1, 1, "test-token", "login:")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -138,7 +139,7 @@ func TestCheckBootStatus_TokenInHeader(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, _ = checkBootStatus(server.URL, 1, 1, expectedToken, "login:")
+	_, _ = checkBootStatus(context.Background(), server.URL, 1, 1, expectedToken, "login:")
 
 	expectedHeader := "Bearer " + expectedToken
 	if capturedAuth != expectedHeader {
@@ -167,7 +168,7 @@ func TestCheckBootStatus_NodeInURL(t *testing.T) {
 			}))
 			defer server.Close()
 
-			_, _ = checkBootStatus(server.URL, tc.node, 1, "token", "login:")
+			_, _ = checkBootStatus(context.Background(), server.URL, tc.node, 1, "token", "login:")
 
 			if capturedNode != tc.expectedNode {
 				t.Errorf("expected node=%s in URL, got node=%s", tc.expectedNode, capturedNode)
@@ -186,7 +187,7 @@ func TestCheckBootStatus_Timeout(t *testing.T) {
 
 	// Use very short timeout to speed up test
 	// Note: This test will take at least 1 second due to the timeout
-	success, err := checkBootStatus(server.URL, 1, 1, "token", "login:")
+	success, err := checkBootStatus(context.Background(), server.URL, 1, 1, "token", "login:")
 
 	if success {
 		t.Error("expected success=false on timeout")
@@ -203,7 +204,7 @@ func TestCheckBootStatus_Timeout(t *testing.T) {
 
 func TestCheckBootStatus_ConnectionError(t *testing.T) {
 	// Use invalid URL to simulate connection error
-	success, err := checkBootStatus("http://localhost:99999", 1, 1, "token", "login:")
+	success, err := checkBootStatus(context.Background(), "http://localhost:99999", 1, 1, "token", "login:")
 
 	if success {
 		t.Error("expected success=false on connection error")
@@ -226,7 +227,7 @@ func TestCheckBootStatus_URLConstruction(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, _ = checkBootStatus(server.URL, 2, 1, "token", "login:")
+	_, _ = checkBootStatus(context.Background(), server.URL, 2, 1, "token", "login:")
 
 	if capturedPath != "/api/bmc" {
 		t.Errorf("expected path /api/bmc, got %s", capturedPath)
@@ -267,7 +268,7 @@ func TestCheckBootStatus_LoginPromptVariations(t *testing.T) {
 			}))
 			defer server.Close()
 
-			success, _ := checkBootStatus(server.URL, 1, 1, "token", "login:")
+			success, _ := checkBootStatus(context.Background(), server.URL, 1, 1, "token", "login:")
 
 			if success != tc.expected {
 				t.Errorf("expected success=%v for response '%s', got %v", tc.expected, tc.response, success)
@@ -298,7 +299,7 @@ func TestCheckBootStatus_CustomPattern(t *testing.T) {
 			}))
 			defer server.Close()
 
-			success, _ := checkBootStatus(server.URL, 1, 1, "token", tc.pattern)
+			success, _ := checkBootStatus(context.Background(), server.URL, 1, 1, "token", tc.pattern)
 
 			if success != tc.expected {
 				t.Errorf("expected success=%v for pattern '%s' in response '%s', got %v", tc.expected, tc.pattern, tc.response, success)

@@ -211,7 +211,7 @@ func TestUploadFlashStream_NoChunkedEncoding(t *testing.T) {
 
 	file, size := writeTempFirmware(t, payload)
 
-	if err := uploadFlashStream(server.URL, "test-token", "handle-123", file, size); err != nil {
+	if err := uploadFlashStream(context.Background(), server.URL, "test-token", "handle-123", file, size); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -262,7 +262,7 @@ func TestUploadFlashStream_SurfacesBMCError(t *testing.T) {
 
 	file, size := writeTempFirmware(t, []byte("firmware"))
 
-	err := uploadFlashStream(server.URL, "test-token", "handle-123", file, size)
+	err := uploadFlashStream(context.Background(), server.URL, "test-token", "handle-123", file, size)
 	if err == nil {
 		t.Fatal("expected error from non-2xx BMC response")
 	}
@@ -296,7 +296,7 @@ func TestGetFlashStatus_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	status, err := getFlashStatus(server.URL, "test-token")
+	status, err := getFlashStatus(context.Background(), server.URL, "test-token")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -313,7 +313,7 @@ func TestGetFlashStatus_Flashing(t *testing.T) {
 	}))
 	defer server.Close()
 
-	status, err := getFlashStatus(server.URL, "test-token")
+	status, err := getFlashStatus(context.Background(), server.URL, "test-token")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -332,7 +332,7 @@ func TestGetFlashStatus_APIError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := getFlashStatus(server.URL, "test-token")
+	_, err := getFlashStatus(context.Background(), server.URL, "test-token")
 	if err == nil {
 		t.Error("expected error for API failure")
 	}
@@ -433,7 +433,7 @@ func TestGetFlashStatus_TransferringNewFormat(t *testing.T) {
 	}))
 	defer server.Close()
 
-	status, err := getFlashStatus(server.URL, "test-token")
+	status, err := getFlashStatus(context.Background(), server.URL, "test-token")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -459,7 +459,7 @@ func TestGetFlashStatus_TransferringOldFormat(t *testing.T) {
 	}))
 	defer server.Close()
 
-	status, err := getFlashStatus(server.URL, "test-token")
+	status, err := getFlashStatus(context.Background(), server.URL, "test-token")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

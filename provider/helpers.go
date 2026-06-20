@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,17 +37,21 @@ func turnOnNode(endpoint, token string, node int) error {
 // flashNode flashes a local firmware image to the given 1-indexed node via the
 // BMC streaming-upload path. See flashFirmwareFile for the known firmware
 // limitation (issue #63).
-func flashNode(endpoint, token string, node int, firmware string) error {
-	return flashFirmwareFile(endpoint, token, node, node-1, firmware)
+func flashNode(ctx context.Context, endpoint, token string, node int, firmware string) error {
+	return flashFirmwareFile(ctx, endpoint, token, node, node-1, firmware)
 }
 
-func checkBootStatus(endpoint string, node int, timeout int, token string, pattern string) (bool, error) {
+func checkBootStatus(ctx context.Context, endpoint string, node int, timeout int, token string, pattern string) (bool, error) {
 	url := fmt.Sprintf("%s/api/bmc?opt=get&type=uart&node=%d", endpoint, node)
 
 	deadline := time.Now().Add(time.Duration(timeout) * time.Second)
 
 	for time.Now().Before(deadline) {
-		req, err := http.NewRequest("GET", url, nil)
+		if err := ctx.Err(); err != nil {
+			return false, err
+		}
+
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 		if err != nil {
 			return false, fmt.Errorf("failed to create UART request: %v", err)
 		}
@@ -69,7 +74,11 @@ func checkBootStatus(endpoint string, node int, timeout int, token string, patte
 			return true, nil
 		}
 
-		time.Sleep(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		case <-time.After(5 * time.Second):
+		}
 	}
 
 	return false, fmt.Errorf("timeout reached: node %d did not boot successfully (pattern %q not found)", node, pattern)
