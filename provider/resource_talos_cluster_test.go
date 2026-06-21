@@ -541,3 +541,36 @@ func TestResourceTalosCluster_Description(t *testing.T) {
 		t.Error("Description should mention Talos")
 	}
 }
+
+// The per-node hostname must be a valid lowercase RFC-1123 hostname label (or
+// empty to use the turing-cp-N / turing-w-N default), since it becomes the
+// Talos node's network.hostname and the Kubernetes node name.
+func TestTalosNode_HostnameValidation(t *testing.T) {
+	validate := talosNodeSchema().Schema["hostname"].ValidateDiagFunc
+	if validate == nil {
+		t.Fatal("hostname should have ValidateDiagFunc")
+	}
+
+	cases := []struct {
+		name    string
+		v       string
+		wantErr bool
+	}{
+		{"empty_uses_default", "", false},
+		{"valid_cp", "turing-cp1", false},
+		{"valid_worker", "turing-w-3", false},
+		{"valid_simple", "node1", false},
+		{"uppercase", "Turing-CP1", true},
+		{"underscore", "node_1", true},
+		{"leading_hyphen", "-leading", true},
+		{"trailing_hyphen", "trailing-", true},
+		{"contains_dot", "has.dot", true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if diags := validate(c.v, nil); c.wantErr != diags.HasError() {
+				t.Errorf("hostname=%q: wantErr=%v, got diags=%v", c.v, c.wantErr, diags)
+			}
+		})
+	}
+}

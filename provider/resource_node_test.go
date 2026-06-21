@@ -5,17 +5,51 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// newPowerMockServer returns a test BMC that accepts power set/get requests so
-// resource_node CRUD paths (which now make real BMC calls) can run offline.
-func newPowerMockServer(t *testing.T) *httptest.Server {
+// powerRecorder captures the URLs of power set-requests a test BMC received so
+// tests can assert what was actually sent (node index and on/off value).
+type powerRecorder struct {
+	mu   sync.Mutex
+	sets []string
+}
+
+func (p *powerRecorder) add(u string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.sets = append(p.sets, u)
+}
+
+func (p *powerRecorder) contains(substr string) bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for _, u := range p.sets {
+		if strings.Contains(u, substr) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *powerRecorder) count() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return len(p.sets)
+}
+
+// newPowerMockServer returns a test BMC that answers power get/set requests and
+// a recorder capturing every set-request URL, so resource_node CRUD paths
+// (which make real BMC calls) can run offline and be asserted against.
+func newPowerMockServer(t *testing.T) (*httptest.Server, *powerRecorder) {
 	t.Helper()
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// type=get power returns a status payload; set requests just need 200.
+	rec := &powerRecorder{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// type=get power returns a status payload; set requests are recorded.
 		if r.URL.Query().Get("opt") == "get" {
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{
 				"response": [][]interface{}{
@@ -27,8 +61,10 @@ func newPowerMockServer(t *testing.T) *httptest.Server {
 			})
 			return
 		}
+		rec.add(r.URL.String())
 		w.WriteHeader(http.StatusOK)
 	}))
+	return srv, rec
 }
 
 func TestResourceNode(t *testing.T) {
@@ -196,7 +232,7 @@ func TestResourceNode_HasCRUDFunctions(t *testing.T) {
 }
 
 func TestResourceNodeProvision_SetsId(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, _ := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()
@@ -223,7 +259,7 @@ func TestResourceNodeProvision_SetsId(t *testing.T) {
 }
 
 func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, _ := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()
@@ -263,7 +299,7 @@ func TestResourceNodeProvision_DifferentNodes(t *testing.T) {
 }
 
 func TestResourceNodeProvision_PowerStateOn(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, rec := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()
@@ -282,10 +318,13 @@ func TestResourceNodeProvision_PowerStateOn(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
+	if !rec.contains("node1=1") {
+		t.Error("expected a power-on request (node1=1) to the BMC")
+	}
 }
 
 func TestResourceNodeProvision_PowerStateOff(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, rec := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()
@@ -303,6 +342,9 @@ func TestResourceNodeProvision_PowerStateOff(t *testing.T) {
 	diags := resourceNodeCreate(context.Background(), d, config)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
+	}
+	if !rec.contains("node1=0") {
+		t.Error("expected a power-off request (node1=0) to the BMC")
 	}
 }
 
@@ -413,7 +455,7 @@ func TestResourceNodeProvision_CustomBootCheckPattern(t *testing.T) {
 }
 
 func TestResourceNodeStatus_SetsPowerState(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, _ := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()
@@ -436,7 +478,7 @@ func TestResourceNodeStatus_SetsPowerState(t *testing.T) {
 }
 
 func TestResourceNodeDelete_TurnsOffNode(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, rec := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()
@@ -450,10 +492,13 @@ func TestResourceNodeDelete_TurnsOffNode(t *testing.T) {
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %s", diags[0].Summary)
 	}
+	if !rec.contains("node1=0") {
+		t.Error("expected delete to power the node off (node1=0)")
+	}
 }
 
 func TestResourceNodeDelete_DifferentNodes(t *testing.T) {
-	server := newPowerMockServer(t)
+	server, _ := newPowerMockServer(t)
 	defer server.Close()
 
 	r := resourceNode()

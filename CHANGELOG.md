@@ -10,11 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`turingpi_node`: `firmware_url`** - the node resource can now flash via the BMC's reliable URL-pull path (the BMC fetches the image itself and reports completion only after the eMMC write finishes), shared with `turingpi_flash` through a new `flashFirmwareURL` helper. Mutually exclusive with `firmware_file`.
+- **`turingpi_talos_cluster`: per-node `hostname` validation** - the `hostname` argument is now checked at plan time against a lowercase RFC-1123 hostname label (it becomes the Talos `network.hostname` and the Kubernetes node name), so an invalid hostname fails the plan instead of failing later inside Talos config apply. Empty stays allowed (uses the `turing-cp-N` / `turing-w-N` default).
 
 ### Changed
 
 - **Helm integration migrated to Helm v4**: `github.com/mittwald/go-helm-client` bumped 0.12.19 → 0.13.1, which switched its Helm dependency from v3 to v4. `provider/helm_client.go` moved to the v4 API (`pkg/repo/v1`, `pkg/release/v1`, release status constants from `pkg/release/common`, and `ChartSpec.WaitStrategy` / `RollbackOnFailure` replacing the removed `Wait` / `Atomic` bools). `helm.sh/helm/v3` dropped from `go.mod` (#107).
 - **`turingpi_node` power control reuses `setPowerState`** (the same dispatch as `turingpi_power`); the trivial `turnOnNode` / `turnOffNode` / `flashNode` wrapper helpers were removed, and the URL-flash logic was extracted into a shared `flashFirmwareURL` used by both `turingpi_flash` and `turingpi_node`.
+- **Node-ID `1-4` validation is now a single shared `validateNodeID`** applied across every node-numbered resource and data source, instead of the bound being re-declared inline in each schema.
+- **`turingpi_node` skips redundant power calls** - on update it only sets power when `power_state` changed, and it no longer issues a power-off to a node that a just-completed flash already powered off.
 
 ### Deprecated
 

@@ -23,7 +23,7 @@ func resourcePower() *schema.Resource {
 				Type:             schema.TypeInt,
 				Required:         true,
 				Description:      "Node ID to control power (1-4)",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 			},
 			"state": {
 				Type:             schema.TypeString,

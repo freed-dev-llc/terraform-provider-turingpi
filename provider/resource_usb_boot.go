@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceUSBBoot() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceUSBBoot() *schema.Resource {
 			"node": {
 				Type:             schema.TypeInt,
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 				Description:      "The node number (1-4) to enable USB boot mode for.",
 			},
 			"triggers": {

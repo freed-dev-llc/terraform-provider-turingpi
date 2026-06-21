@@ -33,7 +33,7 @@ func resourceFlash() *schema.Resource {
 				Required:         true,
 				Description:      "Node ID to flash firmware (1-4)",
 				ForceNew:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 			},
 			"firmware_file": {
 				Type:         schema.TypeString,
