@@ -24,23 +24,6 @@ func checkPowerStatus(endpoint, token string, node int) (string, error) {
 	return "off", nil
 }
 
-// turnOffNode powers off the given 1-indexed node via the BMC.
-func turnOffNode(endpoint, token string, node int) error {
-	return setNodePower(endpoint, token, node, false)
-}
-
-// turnOnNode powers on the given 1-indexed node via the BMC.
-func turnOnNode(endpoint, token string, node int) error {
-	return setNodePower(endpoint, token, node, true)
-}
-
-// flashNode flashes a local firmware image to the given 1-indexed node via the
-// BMC streaming-upload path. See flashFirmwareFile for the known firmware
-// limitation (issue #63).
-func flashNode(ctx context.Context, endpoint, token string, node int, firmware string) error {
-	return flashFirmwareFile(ctx, endpoint, token, node, node-1, firmware)
-}
-
 func checkBootStatus(ctx context.Context, endpoint string, node int, timeout int, token string, pattern string) (bool, error) {
 	url := fmt.Sprintf("%s/api/bmc?opt=get&type=uart&node=%d", endpoint, node)
 

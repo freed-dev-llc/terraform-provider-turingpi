@@ -46,50 +46,6 @@ func TestCheckPowerStatus_Error(t *testing.T) {
 	}
 }
 
-func TestTurnOnNode(t *testing.T) {
-	var capturedURL string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedURL = r.URL.String()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	if err := turnOnNode(server.URL, "token", 1); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if !strings.Contains(capturedURL, "node1=1") {
-		t.Errorf("expected power-on URL to contain 'node1=1', got %s", capturedURL)
-	}
-}
-
-func TestTurnOffNode(t *testing.T) {
-	var capturedURL string
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedURL = r.URL.String()
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	if err := turnOffNode(server.URL, "token", 2); err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	if !strings.Contains(capturedURL, "node2=0") {
-		t.Errorf("expected power-off URL to contain 'node2=0', got %s", capturedURL)
-	}
-}
-
-func TestFlashNode_FileNotFound(t *testing.T) {
-	// flashNode opens the firmware file before contacting the BMC, so a missing
-	// file surfaces as an error without any network call.
-	err := flashNode(context.Background(), "https://test.local", "token", 1, "/nonexistent/firmware.img")
-	if err == nil {
-		t.Fatal("expected error for missing firmware file, got nil")
-	}
-	if !strings.Contains(err.Error(), "failed to open firmware file") {
-		t.Errorf("expected file-open error, got: %s", err)
-	}
-}
-
 func TestCheckBootStatus_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify request method

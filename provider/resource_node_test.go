@@ -43,6 +43,7 @@ func TestResourceNode_Schema(t *testing.T) {
 
 	expectedFields := []string{
 		"node",
+		"firmware_url",
 		"firmware_file",
 		"power_state",
 		"boot_check",
@@ -65,6 +66,7 @@ func TestResourceNode_SchemaTypes(t *testing.T) {
 		expected schema.ValueType
 	}{
 		{"node", schema.TypeInt},
+		{"firmware_url", schema.TypeString},
 		{"firmware_file", schema.TypeString},
 		{"power_state", schema.TypeString},
 		{"boot_check", schema.TypeBool},
@@ -81,6 +83,47 @@ func TestResourceNode_SchemaTypes(t *testing.T) {
 	}
 }
 
+// firmware_url must look like an http(s) URL — the BMC only accepts that, and
+// it is the reliable flash path (vs the deprecated firmware_file).
+func TestResourceNode_FirmwareURLValidation(t *testing.T) {
+	r := resourceNode()
+	validate := r.Schema["firmware_url"].ValidateDiagFunc
+	if validate == nil {
+		t.Fatal("firmware_url should have ValidateDiagFunc")
+	}
+
+	cases := []struct {
+		v       string
+		wantErr bool
+	}{
+		{"http://example.com/img.xz", false},
+		{"https://example.com/img.xz", false},
+		{"ftp://example.com/img.xz", true},
+		{"/local/path", true},
+	}
+	for _, c := range cases {
+		t.Run(c.v, func(t *testing.T) {
+			if diags := validate(c.v, nil); c.wantErr != diags.HasError() {
+				t.Errorf("firmware_url=%q: wantErr=%v, got diags=%v", c.v, c.wantErr, diags)
+			}
+		})
+	}
+}
+
+// firmware_url and firmware_file are mutually exclusive via ConflictsWith.
+func TestResourceNode_FirmwareConflictsWith(t *testing.T) {
+	r := resourceNode()
+	if got := r.Schema["firmware_url"].ConflictsWith; len(got) != 1 || got[0] != "firmware_file" {
+		t.Errorf("firmware_url ConflictsWith should be [firmware_file], got %v", got)
+	}
+	if got := r.Schema["firmware_file"].ConflictsWith; len(got) != 1 || got[0] != "firmware_url" {
+		t.Errorf("firmware_file ConflictsWith should be [firmware_url], got %v", got)
+	}
+	if r.Schema["firmware_file"].Deprecated == "" {
+		t.Error("firmware_file should be marked Deprecated")
+	}
+}
+
 func TestResourceNode_RequiredFields(t *testing.T) {
 	r := resourceNode()
 
@@ -93,6 +136,7 @@ func TestResourceNode_OptionalFields(t *testing.T) {
 	r := resourceNode()
 
 	optionalFields := []string{
+		"firmware_url",
 		"firmware_file",
 		"power_state",
 		"boot_check",

@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -32,10 +33,19 @@ func resourceNode() *schema.Resource {
 				Description:      "Node ID to manage (1-4)",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
 			},
+			"firmware_url": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "HTTP(S) URL the BMC pulls the firmware image from. This is the reliable flash path: the BMC reports completion only after the eMMC write finishes. Mutually exclusive with firmware_file.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringMatch(regexp.MustCompile(`^https?://`), "must be an http(s) URL")),
+				ConflictsWith:    []string{"firmware_file"},
+			},
 			"firmware_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Path to the firmware file (required for flashing)",
+				Type:          schema.TypeString,
+				Optional:      true,
+				Deprecated:    "Use firmware_url instead. firmware_file uses the BMC streaming-upload path, which is known broken on current firmware (issue #63): the BMC reports completion before the eMMC write finishes, so the apply can succeed against a node that was never actually flashed. firmware_url has the BMC pull the image itself and report accurate completion.",
+				Description:   "Path to a local firmware image streamed to the node. Deprecated: prefer firmware_url. Mutually exclusive with firmware_url.",
+				ConflictsWith: []string{"firmware_url"},
 			},
 			"power_state": {
 				Type:             schema.TypeString,
@@ -66,23 +76,27 @@ func resourceNode() *schema.Resource {
 	}
 }
 
+// firmwareConfigured reports whether either flash input is set.
+func firmwareConfigured(d *schema.ResourceData) bool {
+	return d.Get("firmware_url").(string) != "" || d.Get("firmware_file").(string) != ""
+}
+
 func resourceNodeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// On create, flash whenever a firmware file is configured.
-	firmware := d.Get("firmware_file").(string)
-	return applyNode(ctx, d, meta.(*ProviderConfig), firmware != "")
+	// On create, flash whenever a firmware source is configured.
+	return applyNode(ctx, d, meta.(*ProviderConfig), firmwareConfigured(d))
 }
 
 func resourceNodeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// On update, only re-flash when firmware_file actually changed. Otherwise an
-	// unrelated edit (e.g. toggling power_state) would re-image the eMMC on
-	// every apply.
-	firmware := d.Get("firmware_file").(string)
-	return applyNode(ctx, d, meta.(*ProviderConfig), firmware != "" && d.HasChange("firmware_file"))
+	// On update, only re-flash when a firmware source actually changed.
+	// Otherwise an unrelated edit (e.g. toggling power_state) would re-image the
+	// eMMC on every apply.
+	doFlash := firmwareConfigured(d) && (d.HasChange("firmware_url") || d.HasChange("firmware_file"))
+	return applyNode(ctx, d, meta.(*ProviderConfig), doFlash)
 }
 
 // applyNode runs the provision sequence: optionally flash, apply the desired
-// power state, then optionally wait for boot. doFlash decides whether the
-// (known-broken, issue #63) streaming flash runs this round.
+// power state, then optionally wait for boot. doFlash decides whether a flash
+// runs this round.
 func applyNode(ctx context.Context, d *schema.ResourceData, config *ProviderConfig, doFlash bool) diag.Diagnostics {
 	node := d.Get("node").(int)
 	powerState := d.Get("power_state").(string)
@@ -91,23 +105,26 @@ func applyNode(ctx context.Context, d *schema.ResourceData, config *ProviderConf
 	bootCheckPattern := d.Get("boot_check_pattern").(string)
 
 	// Step 1: Flash firmware. Flashing powers the node off, so it must run
-	// before we apply the desired power state below.
+	// before we apply the desired power state below. Prefer the reliable URL
+	// path; fall back to the deprecated streaming file path.
 	if doFlash {
-		firmware := d.Get("firmware_file").(string)
-		tflog.Warn(ctx, "turingpi_node: firmware_file uses the streaming upload flash path, which is known broken on current BMC firmware - the BMC reports Done before the eMMC write completes (issue #63), so boot_check may pass against the previously installed OS. Use turingpi_flash with firmware_url for reliable flashing.")
-		if err := flashNode(ctx, config.Endpoint, config.Token, node, firmware); err != nil {
-			return diag.FromErr(fmt.Errorf("failed to flash node %d: %w", node, err))
+		apiNode := node - 1 // BMC flash API is 0-indexed
+		if firmwareURL := d.Get("firmware_url").(string); firmwareURL != "" {
+			if err := flashFirmwareURL(ctx, config.Endpoint, config.Token, node, apiNode, firmwareURL); err != nil {
+				return diag.FromErr(fmt.Errorf("failed to flash node %d from URL: %w", node, err))
+			}
+		} else {
+			firmwareFile := d.Get("firmware_file").(string)
+			tflog.Warn(ctx, "turingpi_node: firmware_file uses the streaming upload flash path, which is known broken on current BMC firmware - the BMC reports Done before the eMMC write completes (issue #63), so boot_check may pass against the previously installed OS. Use firmware_url for reliable flashing.")
+			if err := flashFirmwareFile(ctx, config.Endpoint, config.Token, node, apiNode, firmwareFile); err != nil {
+				return diag.FromErr(fmt.Errorf("failed to flash node %d: %w", node, err))
+			}
 		}
 	}
 
-	// Step 2: Apply the desired power state.
-	var err error
-	if powerState == "on" {
-		err = turnOnNode(config.Endpoint, config.Token, node)
-	} else {
-		err = turnOffNode(config.Endpoint, config.Token, node)
-	}
-	if err != nil {
+	// Step 2: Apply the desired power state. Reuses the same dispatch as
+	// turingpi_power.
+	if err := setPowerState(config.Endpoint, config.Token, node, powerState); err != nil {
 		return diag.FromErr(fmt.Errorf("failed to set power state for node %d: %w", node, err))
 	}
 
@@ -150,7 +167,7 @@ func resourceNodeStatus(_ context.Context, d *schema.ResourceData, meta interfac
 func resourceNodeDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*ProviderConfig)
 	node := d.Get("node").(int)
-	if err := turnOffNode(config.Endpoint, config.Token, node); err != nil {
+	if err := setPowerState(config.Endpoint, config.Token, node, "off"); err != nil {
 		return diag.FromErr(fmt.Errorf("failed to power off node %d on delete: %w", node, err))
 	}
 	return nil

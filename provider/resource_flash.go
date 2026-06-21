@@ -221,46 +221,57 @@ func flashFirmwareFile(ctx context.Context, endpoint, token string, node, apiNod
 	return nil
 }
 
-// resourceFlashFromURL drives the BMC's URL-based flash path: the BMC pulls
-// the firmware directly and only reports Done after the eMMC write actually
-// completes. This avoids the streaming-flash Done-too-early bug (issue #63).
+// resourceFlashFromURL drives the BMC's URL-based flash path for the
+// turingpi_flash resource: it delegates to flashFirmwareURL and records state.
 func resourceFlashFromURL(ctx context.Context, d *schema.ResourceData, config *ProviderConfig, node, apiNode int, firmwareURL string) diag.Diagnostics {
+	if err := flashFirmwareURL(ctx, config.Endpoint, config.Token, node, apiNode, firmwareURL); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(fmt.Sprintf("flash-node-%d", node))
+	return nil
+}
+
+// flashFirmwareURL drives the BMC's URL-based flash path: the BMC pulls the
+// firmware directly and only reports Done after the eMMC write actually
+// completes, avoiding the streaming-flash Done-too-early bug (issue #63). node
+// is 1-indexed (power API); apiNode is the 0-indexed value the flash API
+// expects. Shared by turingpi_flash and turingpi_node.
+func flashFirmwareURL(ctx context.Context, endpoint, token string, node, apiNode int, firmwareURL string) error {
 	fmt.Printf("Flashing node %d from URL %s\n", node, firmwareURL)
 
-	// Power off the node before flashing
-	if err := setNodePower(config.Endpoint, config.Token, node, false); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to power off node before flash: %w", err))
+	// Power off the node before flashing.
+	if err := setNodePower(endpoint, token, node, false); err != nil {
+		return fmt.Errorf("failed to power off node before flash: %w", err)
 	}
 	time.Sleep(2 * time.Second)
 
 	// The BMC pulls firmwareURL itself; we just kick it off and poll.
-	initURL := buildURLFlashInit(config.Endpoint, apiNode, firmwareURL)
+	initURL := buildURLFlashInit(endpoint, apiNode, firmwareURL)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", initURL, nil)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("failed to create URL-flash request: %w", err))
+		return fmt.Errorf("failed to create URL-flash request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+config.Token)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("URL-flash initiation failed: %w", err))
+		return fmt.Errorf("URL-flash initiation failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return diag.Errorf("URL-flash initiation failed with status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("URL-flash initiation failed with status %d: %s", resp.StatusCode, string(body))
 	}
 	// Body is informational ("ok") — don't depend on it.
 
 	fmt.Printf("BMC is pulling firmware from %s, waiting for flash to finish...\n", firmwareURL)
 
-	if err := pollFlashUntilDone(ctx, config.Endpoint, config.Token, 25*time.Minute); err != nil {
-		return diag.FromErr(err)
+	if err := pollFlashUntilDone(ctx, endpoint, token, 25*time.Minute); err != nil {
+		return err
 	}
 	fmt.Printf("Flash completed successfully\n")
-	d.SetId(fmt.Sprintf("flash-node-%d", node))
 	return nil
 }
 

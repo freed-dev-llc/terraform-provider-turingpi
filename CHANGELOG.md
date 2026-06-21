@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`turingpi_node`: `firmware_url`** - the node resource can now flash via the BMC's reliable URL-pull path (the BMC fetches the image itself and reports completion only after the eMMC write finishes), shared with `turingpi_flash` through a new `flashFirmwareURL` helper. Mutually exclusive with `firmware_file`.
+
 ### Changed
 
 - **Helm integration migrated to Helm v4**: `github.com/mittwald/go-helm-client` bumped 0.12.19 → 0.13.1, which switched its Helm dependency from v3 to v4. `provider/helm_client.go` moved to the v4 API (`pkg/repo/v1`, `pkg/release/v1`, release status constants from `pkg/release/common`, and `ChartSpec.WaitStrategy` / `RollbackOnFailure` replacing the removed `Wait` / `Atomic` bools). `helm.sh/helm/v3` dropped from `go.mod` (#107).
+- **`turingpi_node` power control reuses `setPowerState`** (the same dispatch as `turingpi_power`); the trivial `turnOnNode` / `turnOffNode` / `flashNode` wrapper helpers were removed, and the URL-flash logic was extracted into a shared `flashFirmwareURL` used by both `turingpi_flash` and `turingpi_node`.
+
+### Deprecated
+
+- **`turingpi_node`: `firmware_file`** - it uses the streaming-upload flash path known broken on current BMC firmware (issue #63) and now emits a deprecation warning. Use `firmware_url` instead; the two are mutually exclusive.
 
 ### Fixed
 
@@ -36,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Documented the `version` argument on the `metallb` and `ingress` blocks of `turingpi_k3s_cluster` and `turingpi_talos_cluster` (Optional chart version, defaults to latest); it was a usable schema field with no docs.
-- `docs/resources/node.md`: noted that `firmware_file` uses the streaming-flash path (known broken on current BMC firmware, issue #63) and to prefer `turingpi_flash` with `firmware_url`.
+- `docs/resources/node.md`: documented `firmware_url`, marked `firmware_file` deprecated, switched the examples to `firmware_url`, and added a note not to manage the same node with both `turingpi_node` and `turingpi_power` / `turingpi_flash`.
 - `README.md`: required Go version 1.25 → 1.26 (matches `go.mod`) (#108).
 - `TODO.md`: updated for v1.5.1; OpenTofu Registry marked live (#91).
 
