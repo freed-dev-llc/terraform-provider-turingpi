@@ -48,13 +48,13 @@ When `boot_check = true`, the provider monitors UART output for a login prompt. 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_turingpi"></a> [turingpi](#requirement\_turingpi) | >= 1.5.0 |
+| <a name="requirement_turingpi"></a> [turingpi](#requirement\_turingpi) | >= 1.6.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_turingpi"></a> [turingpi](#provider\_turingpi) | >= 1.5.0 |
+| <a name="provider_turingpi"></a> [turingpi](#provider\_turingpi) | >= 1.6.0 |
 
 ## Modules
 
@@ -101,11 +101,11 @@ No modules.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_turingpi"></a> [turingpi](#provider\_turingpi) | >= 1.5.0 |
+| <a name="provider_turingpi"></a> [turingpi](#provider\_turingpi) | >= 1.6.0 |
 
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_turingpi"></a> [turingpi](#requirement\_turingpi) | >= 1.5.0 |
+| <a name="requirement_turingpi"></a> [turingpi](#requirement\_turingpi) | >= 1.6.0 |
 <!-- END_TF_DOCS -->

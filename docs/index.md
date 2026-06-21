@@ -25,7 +25,7 @@ terraform {
   required_providers {
     turingpi = {
       source  = "freed-dev-llc/turingpi"
-      version = ">= 1.5.0"
+      version = ">= 1.6.0"
     }
   }
 }
@@ -102,7 +102,7 @@ For cluster deployment, use the [terraform-turingpi-modules](https://registry.te
 ```hcl
 module "flash" {
   source  = "freed-dev-llc/modules/turingpi//modules/flash-nodes"
-  version = ">= 1.5.0"
+  version = ">= 1.6.0"
 
   nodes = {
     1 = { firmware = "talos-arm64.raw" }
@@ -112,7 +112,7 @@ module "flash" {
 
 module "cluster" {
   source  = "freed-dev-llc/modules/turingpi//modules/talos-cluster"
-  version = ">= 1.5.0"
+  version = ">= 1.6.0"
 
   cluster_name     = "my-cluster"
   cluster_endpoint = "https://10.10.88.73:6443"

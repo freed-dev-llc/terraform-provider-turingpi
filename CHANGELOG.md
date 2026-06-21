@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-20
+
 ### Added
 
 - **`turingpi_node`: `firmware_url`** - the node resource can now flash via the BMC's reliable URL-pull path (the BMC fetches the image itself and reports completion only after the eMMC write finishes), shared with `turingpi_flash` through a new `flashFirmwareURL` helper. Mutually exclusive with `firmware_file`.
@@ -560,7 +562,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation workflow with GoReleaser
 - Multi-platform binaries (linux/darwin/windows, amd64/arm64)
 
-[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.4.0...v1.4.1
