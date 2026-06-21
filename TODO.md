@@ -2,7 +2,17 @@
 
 This file tracks planned features and implementation tasks for the Terraform Turing Pi provider.
 
-## Current Release: v1.5.1 (2026-05-24)
+## Current Release: v1.6.0 (2026-06-20)
+
+### Recently Completed (v1.5.1 → v1.6.0)
+
+- [x] **`turingpi_node` made functional**: power control, firmware flashing, and power-status reads were no-op stubs that only logged; now call the real BMC API (#109)
+- [x] **`turingpi_node` lifecycle hardening**: `firmware_*` re-flashes only on change, `node` is `ForceNew`, ID set before `boot_check`, `Timeouts` block + `context` cancellation through the flash/boot poll loops, redundant power calls skipped (#109, #111)
+- [x] **Added** `firmware_url` to `turingpi_node` - reliable BMC-pull flash shared with `turingpi_flash` via `flashFirmwareURL`; `firmware_file` deprecated (#110)
+- [x] **RFC-1123 `hostname` validation** on `turingpi_talos_cluster` (becomes Talos `network.hostname` / the k8s node name) (#111)
+- [x] **Shared `validateNodeID`** (1-4) across every node-numbered resource and data source, replacing the inline bound duplicated in 9 schemas (#111)
+- [x] **Helm integration migrated to Helm v4** - go-helm-client 0.13.1, `helm.sh/helm/v3` dropped from `go.mod` (#107)
+- [x] **Stale-doc cleanup**: talos/k3s `metallb`/`ingress` `enabled` defaults, `node` import section, ARCHITECTURE endpoint/helper names, documented the `metallb`/`ingress` `version` arg (#108, #109, #110)
 
 ### Recently Completed (v1.5.0 → v1.5.1)
 
@@ -30,9 +40,9 @@ This file tracks planned features and implementation tasks for the Terraform Tur
 
 ---
 
-## Milestone: v1.6.0 - Polish & Stability
+## Milestone: v1.7.0 - Polish & Stability (#113)
 
-Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shipped firmware_url + gosec triage).
+Items carried over from the original v1.4.0 plan (still pending after v1.6.0 shipped the `turingpi_node` overhaul, Helm v4, and the validation/test hardening).
 
 ### Testing Infrastructure
 - [ ] Add mock Kubernetes API for testing
@@ -54,7 +64,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 
 ---
 
-## Milestone: v1.7.0 - Advanced Features
+## Milestone: v1.8.0 - Advanced Features (#114)
 
 ### Cluster Operations
 - [ ] Implement cluster upgrade support (K3s version bumps)
@@ -72,7 +82,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 
 ---
 
-## Milestone: v1.8.0 - Multi-Cluster & Observability
+## Milestone: v1.9.0 - Multi-Cluster & Observability (#115)
 
 ### Multi-Cluster Support
 - [ ] Support managing multiple clusters
@@ -87,7 +97,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 
 ---
 
-## Milestone: v2.0.0 - NPU Support
+## Milestone: v2.0.0 - NPU Support (#116)
 
 ### NPU Support (RK3588) - Pending Kernel Support
 - [ ] Detect vendor kernel (6.1.x) for NPU compatibility
@@ -99,7 +109,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 
 ---
 
-## Research Tasks
+## Research Tasks (#117)
 
 ### Ansible Integration Options
 - [ ] Evaluate `hashicorp/terraform-provider-ansible`
@@ -116,6 +126,12 @@ Items carried over from the original v1.4.0 plan (still pending after v1.5.0 shi
 ---
 
 ## Completed Milestones
+
+### v1.6.0 - Node Resource Overhaul & Helm v4 ✅ (2026-06-20)
+See "Recently Completed" above for the full list.
+
+### v1.5.x - firmware_url & Gosec Triage ✅ (2026-05-24)
+See "Recently Completed" above for the full list.
 
 ### v1.4.1 - Stability & Tooling Recovery ✅ (2026-05-17)
 See "Recently Completed" above for the full list.
