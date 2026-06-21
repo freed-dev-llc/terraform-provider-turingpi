@@ -36,12 +36,6 @@ func (p *powerRecorder) contains(substr string) bool {
 	return false
 }
 
-func (p *powerRecorder) count() int {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	return len(p.sets)
-}
-
 // newPowerMockServer returns a test BMC that answers power get/set requests and
 // a recorder capturing every set-request URL, so resource_node CRUD paths
 // (which make real BMC calls) can run offline and be asserted against.
