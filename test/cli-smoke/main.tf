@@ -1,7 +1,9 @@
 # Minimal config exercised by the cli-smoketest CI job on every PR.
 # The job builds the provider binary, points the CLI at it via
-# dev_overrides, then runs `init -input=false` + `validate` under
-# both terraform and tofu. Both must succeed.
+# dev_overrides, then runs `validate` under both terraform and tofu.
+# Both must succeed. No `init` is run: dev_overrides bypasses the
+# registry, and OpenTofu rejects an init registry lookup when an
+# override is in effect.
 #
 # This catches provider-loading regressions in either tool (e.g. a
 # manifest schema field added by HashiCorp that OpenTofu hasn't
@@ -15,7 +17,7 @@ terraform {
   required_providers {
     turingpi = {
       source  = "freed-dev-llc/turingpi"
-      version = ">= 1.0"
+      version = ">= 1.6.0"
     }
   }
 }

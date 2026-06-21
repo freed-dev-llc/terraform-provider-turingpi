@@ -59,9 +59,10 @@ jobs:
 
   cli-smoketest:
     # Loads the dev-built provider binary under both terraform and tofu
-    # CLIs and runs `init -input=false` + `validate` against
-    # test/cli-smoke/. Catches provider-loading regressions in either
-    # tool (manifest schema, plugin protocol handshake).
+    # CLIs and runs `validate` against test/cli-smoke/ (no `init` -
+    # dev_overrides bypasses the registry). Catches provider-loading
+    # regressions in either tool (manifest schema, plugin protocol
+    # handshake).
     runs-on: [self-hosted, linux]
     strategy:
       fail-fast: false
