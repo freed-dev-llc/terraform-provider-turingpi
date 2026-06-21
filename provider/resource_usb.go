@@ -50,7 +50,7 @@ func resourceUSB() *schema.Resource {
 				Type:             schema.TypeInt,
 				Required:         true,
 				Description:      "Node ID to route USB to (1-4)",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 			},
 			"mode": {
 				Type:             schema.TypeString,

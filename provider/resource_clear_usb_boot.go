@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceClearUSBBoot() *schema.Resource {
@@ -21,7 +20,7 @@ func resourceClearUSBBoot() *schema.Resource {
 			"node": {
 				Type:             schema.TypeInt,
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 				Description:      "The node number (1-4) to clear USB boot status for.",
 			},
 			"triggers": {

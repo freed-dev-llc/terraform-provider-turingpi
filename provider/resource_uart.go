@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceUART() *schema.Resource {
@@ -25,7 +24,7 @@ func resourceUART() *schema.Resource {
 				Type:             schema.TypeInt,
 				Required:         true,
 				Description:      "Node ID to write UART data to (1-4)",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 			},
 			"command": {
 				Type:        schema.TypeString,

@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceNodeToMSD() *schema.Resource {
@@ -23,7 +22,7 @@ func resourceNodeToMSD() *schema.Resource {
 			"node": {
 				Type:             schema.TypeInt,
 				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 				Description:      "The node number (1-4) to reboot into MSD mode.",
 			},
 			"triggers": {

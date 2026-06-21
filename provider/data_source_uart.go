@@ -26,7 +26,7 @@ func dataSourceUART() *schema.Resource {
 				Type:             schema.TypeInt,
 				Required:         true,
 				Description:      "Node ID to read UART output from (1-4)",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 			},
 			"encoding": {
 				Type:             schema.TypeString,

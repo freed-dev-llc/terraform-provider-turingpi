@@ -222,7 +222,7 @@ Each node block (`control_plane` or `worker`) accepts the following arguments:
 
 - `host` - (Required, String) IP address or hostname of the node.
 
-- `hostname` - (Optional, String) Hostname to assign to the node. Defaults to `turing-cp-N` for control planes or `turing-w-N` for workers.
+- `hostname` - (Optional, String) Hostname to assign to the node. Must be a valid lowercase RFC-1123 hostname label (letters, digits, hyphens; 1-63 chars; no leading or trailing hyphen), since it becomes the Talos node's `network.hostname` and the Kubernetes node name. Defaults to `turing-cp-N` for control planes or `turing-w-N` for workers when empty.
 
 ### MetalLB Configuration
 

@@ -151,9 +151,10 @@ func talosNodeSchema() *schema.Resource {
 				Description: "IP address or hostname of the node.",
 			},
 			"hostname": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Hostname to assign to the node (defaults to turing-cp-N or turing-w-N).",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Hostname to assign to the node (defaults to turing-cp-N or turing-w-N). Must be a valid lowercase RFC-1123 hostname label, or empty to use the default.",
+				ValidateDiagFunc: validateHostname,
 			},
 		},
 	}

@@ -31,7 +31,7 @@ func resourceNode() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				Description:      "Node ID to manage (1-4)",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 4)),
+				ValidateDiagFunc: validateNodeID,
 			},
 			"firmware_url": {
 				Type:             schema.TypeString,
@@ -83,7 +83,7 @@ func firmwareConfigured(d *schema.ResourceData) bool {
 
 func resourceNodeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// On create, flash whenever a firmware source is configured.
-	return applyNode(ctx, d, meta.(*ProviderConfig), firmwareConfigured(d))
+	return applyNode(ctx, d, meta.(*ProviderConfig), firmwareConfigured(d), true)
 }
 
 func resourceNodeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -91,13 +91,14 @@ func resourceNodeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	// Otherwise an unrelated edit (e.g. toggling power_state) would re-image the
 	// eMMC on every apply.
 	doFlash := firmwareConfigured(d) && (d.HasChange("firmware_url") || d.HasChange("firmware_file"))
-	return applyNode(ctx, d, meta.(*ProviderConfig), doFlash)
+	return applyNode(ctx, d, meta.(*ProviderConfig), doFlash, false)
 }
 
 // applyNode runs the provision sequence: optionally flash, apply the desired
 // power state, then optionally wait for boot. doFlash decides whether a flash
-// runs this round.
-func applyNode(ctx context.Context, d *schema.ResourceData, config *ProviderConfig, doFlash bool) diag.Diagnostics {
+// runs this round; isCreate is true on Create (power is always converged) and
+// false on Update (power is applied only when it changed).
+func applyNode(ctx context.Context, d *schema.ResourceData, config *ProviderConfig, doFlash bool, isCreate bool) diag.Diagnostics {
 	node := d.Get("node").(int)
 	powerState := d.Get("power_state").(string)
 	bootCheck := d.Get("boot_check").(bool)
@@ -122,10 +123,18 @@ func applyNode(ctx context.Context, d *schema.ResourceData, config *ProviderConf
 		}
 	}
 
-	// Step 2: Apply the desired power state. Reuses the same dispatch as
-	// turingpi_power.
-	if err := setPowerState(config.Endpoint, config.Token, node, powerState); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to set power state for node %d: %w", node, err))
+	// Step 2: Apply the desired power state, reusing the same dispatch as
+	// turingpi_power. Skip the call when it would be a no-op: on update when
+	// power_state did not change, and right after a flash that already left the
+	// node powered off.
+	needPower := isCreate || d.HasChange("power_state") || doFlash
+	if doFlash && powerState == "off" {
+		needPower = false // flashing already left the node powered off
+	}
+	if needPower {
+		if err := setPowerState(config.Endpoint, config.Token, node, powerState); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to set power state for node %d: %w", node, err))
+		}
 	}
 
 	// Record the resource now that the node exists and its power state is

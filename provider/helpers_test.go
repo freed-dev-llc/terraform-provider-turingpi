@@ -16,22 +16,33 @@ func TestCheckPowerStatus(t *testing.T) {
 			"response": [][]interface{}{
 				{"node1", float64(1)},
 				{"node2", float64(0)},
+				{"node3", float64(1)},
+				{"node4", float64(0)},
 			},
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
-	if state, err := checkPowerStatus(server.URL, "token", 1); err != nil {
-		t.Fatalf("node1: unexpected error: %s", err)
-	} else if state != "on" {
-		t.Errorf("node1: expected 'on', got %s", state)
+	// Cover all four nodes so the per-node key derivation (fmt.Sprintf("node%d"))
+	// is exercised for 3 and 4, not just 1 and 2.
+	cases := []struct {
+		node int
+		want string
+	}{
+		{1, "on"},
+		{2, "off"},
+		{3, "on"},
+		{4, "off"},
 	}
-
-	if state, err := checkPowerStatus(server.URL, "token", 2); err != nil {
-		t.Fatalf("node2: unexpected error: %s", err)
-	} else if state != "off" {
-		t.Errorf("node2: expected 'off', got %s", state)
+	for _, c := range cases {
+		state, err := checkPowerStatus(server.URL, "token", c.node)
+		if err != nil {
+			t.Fatalf("node%d: unexpected error: %s", c.node, err)
+		}
+		if state != c.want {
+			t.Errorf("node%d: expected %q, got %q", c.node, c.want, state)
+		}
 	}
 }
 
