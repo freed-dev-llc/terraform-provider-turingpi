@@ -13,7 +13,7 @@
 
   <rect x="1" y="1" width="798" height="238" rx="28" fill="url(#bg)" stroke="#2C4C61" stroke-width="1.5"/>
 
-  <!-- ICON: a 2x2 compute cluster - control-plane node (terracotta) + three workers (Niagara), joined by a faint interconnect mesh -->
+  <!-- ICON: a 2x2 compute cluster - control-plane node (terracotta) + three workers (Niagara), joined by a faint interconnect mesh, framed by provider angle brackets -->
   <g transform="translate(80,44)">
     <g stroke="#4E7C97" fill="none" stroke-linecap="round">
       <g opacity="0.5" stroke-width="3">
@@ -23,6 +23,11 @@
       <g opacity="0.26" stroke-width="2">
         <line x1="30" y1="30" x2="114" y2="114"/><line x1="114" y1="30" x2="30" y2="114"/>
       </g>
+    </g>
+    <!-- PROVIDER MARK: angle brackets framing the cluster - the plugin that connects to and drives it -->
+    <g fill="none" stroke="#C4683F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6">
+      <polyline points="-12,-6 -30,72 -12,150"/>
+      <polyline points="156,-6 174,72 156,150"/>
     </g>
     <g stroke="#EAF2F7" stroke-opacity="0.10" stroke-width="1">
       <rect x="0" y="0" width="60" height="60" rx="13" fill="url(#cp)"/>
