@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="800" height="240" role="img" aria-label="Turing Pi Terraform provider">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A2C39"/><stop offset="1" stop-color="#0F1C25"/>
+    </linearGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6E9DBA"/><stop offset="1" stop-color="#4E7C97"/>
+    </linearGradient>
+    <linearGradient id="cp" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C4683F"/><stop offset="1" stop-color="#974124"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="798" height="238" rx="28" fill="url(#bg)" stroke="#2C4C61" stroke-width="1.5"/>
+
+  <!-- ICON: a 2x2 compute cluster - control-plane node (terracotta) + three workers (Niagara), joined by a faint interconnect mesh -->
+  <g transform="translate(80,44)">
+    <g stroke="#4E7C97" fill="none" stroke-linecap="round">
+      <g opacity="0.5" stroke-width="3">
+        <line x1="30" y1="30" x2="114" y2="30"/><line x1="30" y1="114" x2="114" y2="114"/>
+        <line x1="30" y1="30" x2="30" y2="114"/><line x1="114" y1="30" x2="114" y2="114"/>
+      </g>
+      <g opacity="0.26" stroke-width="2">
+        <line x1="30" y1="30" x2="114" y2="114"/><line x1="114" y1="30" x2="30" y2="114"/>
+      </g>
+    </g>
+    <g stroke="#EAF2F7" stroke-opacity="0.10" stroke-width="1">
+      <rect x="0" y="0" width="60" height="60" rx="13" fill="url(#cp)"/>
+      <rect x="84" y="0" width="60" height="60" rx="13" fill="url(#node)"/>
+      <rect x="0" y="84" width="60" height="60" rx="13" fill="url(#node)"/>
+      <rect x="84" y="84" width="60" height="60" rx="13" fill="url(#node)"/>
+    </g>
+    <g>
+      <circle cx="30" cy="30" r="6" fill="#FBEEE3" opacity="0.92"/>
+      <circle cx="114" cy="30" r="6" fill="#EAF2F7" opacity="0.85"/>
+      <circle cx="30" cy="114" r="6" fill="#EAF2F7" opacity="0.85"/>
+      <circle cx="114" cy="114" r="6" fill="#EAF2F7" opacity="0.85"/>
+    </g>
+  </g>
+
+  <!-- WORDMARK: TURING + accent PI; subtitle identifies the project -->
+  <g font-family="'Segoe UI','SF Pro Display',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif">
+    <text x="316" y="116" font-size="66" font-weight="800" letter-spacing="0.5" fill="#EAF2F7">TURING<tspan fill="#C4683F" dx="20">PI</tspan></text>
+    <rect x="318" y="134" width="324" height="3" rx="1.5" fill="#C4683F" opacity="0.8"/>
+    <text x="320" y="168" font-size="19" font-weight="600" letter-spacing="4.4" fill="#7FA6BC">TERRAFORM · PROVIDER · BMC</text>
+  </g>
+</svg>
