@@ -59,6 +59,12 @@ The modules repository includes helper scripts for cluster lifecycle management:
 
 > **Note:** The `turingpi_k3s_cluster` and `turingpi_talos_cluster` resources are deprecated and will be removed in v2.0.0. See the [Migration Guide](docs/MIGRATION.md) for upgrade instructions.
 
+## Related Projects
+
+Prefer Ansible over Terraform for provisioning? See the companion repo for K3s on Turing Pi RK1 (with NPU support):
+
+<a href="https://github.com/freed-dev-llc/turing-ansible-cluster"><img alt="Turing RK1 Ansible cluster" src="https://raw.githubusercontent.com/freed-dev-llc/turing-ansible-cluster/main/docs/assets/turing-cluster/logos/turing_cluster_logo_ansible_horizontal.svg" width="260"></a>
+
 ## Documentation
 
 - **[Architecture](docs/ARCHITECTURE.md)** - System diagrams, data flows, and component interactions
