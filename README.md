@@ -1,6 +1,8 @@
 # Terraform Provider for Turing Pi 2.5
 
-[![Terraform Registry](https://img.shields.io/badge/terraform-registry-blueviolet)](https://registry.terraform.io/providers/freed-dev-llc/turingpi)
+![Terraform Provider for Turing Pi 2.5](docs/assets/turingpi/logos/turingpi_logo_horizontal.svg)
+
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-blue)](https://registry.terraform.io/providers/freed-dev-llc/turingpi)
 [![OpenTofu Registry](https://img.shields.io/badge/opentofu-registry-blue)](https://search.opentofu.org/provider/freed-dev-llc/turingpi/latest)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/freed-dev-llc/terraform-provider-turingpi)](https://go.dev/)
 [![Go](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/go.yml/badge.svg)](https://github.com/freed-dev-llc/terraform-provider-turingpi/actions/workflows/go.yml)
