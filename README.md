@@ -65,6 +65,10 @@ Prefer Ansible over Terraform for provisioning? See the companion repo for K3s o
 
 <a href="https://github.com/freed-dev-llc/turing-ansible-cluster"><img alt="Turing RK1 Ansible cluster" src="https://raw.githubusercontent.com/freed-dev-llc/turing-ansible-cluster/main/docs/assets/turing-cluster/logos/turing_cluster_logo_ansible_horizontal.svg" width="260"></a>
 
+Driving bare-metal with scripts instead? See the Talos Linux + K3s/Armbian cluster for Turing Pi RK1:
+
+[![Turing RK1 Cluster — freed-dev-llc/turing-rk1-cluster](docs/assets/buttons/btn_turing_rk1_cluster.svg)](https://github.com/freed-dev-llc/turing-rk1-cluster)
+
 ## Documentation
 
 - **[Architecture](docs/ARCHITECTURE.md)** - System diagrams, data flows, and component interactions
