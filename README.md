@@ -13,6 +13,24 @@
 
 A Terraform provider for managing Turing Pi's Baseboard Management Controller (BMC), enabling power management, firmware flashing, and node provisioning.
 
+> **Part of the Turing Pi cluster stack:** this **provider** drives the Turing Pi BMC; the **modules** wrap it into reusable Terraform, and the cluster repos deploy Kubernetes on top — **Talos** or **K3s**.
+
+[![Terraform Modules — freed-dev-llc/terraform-turingpi-modules](docs/assets/buttons/btn_terraform_turingpi_modules.svg)](https://github.com/freed-dev-llc/terraform-turingpi-modules)
+[![Turing RK1 Ansible — freed-dev-llc/turing-ansible-cluster](docs/assets/buttons/btn_turing_ansible_cluster.svg)](https://github.com/freed-dev-llc/turing-ansible-cluster)
+[![Turing RK1 Cluster — freed-dev-llc/turing-rk1-cluster](docs/assets/buttons/btn_turing_rk1_cluster.svg)](https://github.com/freed-dev-llc/turing-rk1-cluster)
+
+## Contents
+
+- [Features](#features)
+- [Terraform Modules](#terraform-modules)
+- [Documentation](#documentation)
+- [Quick Start](#quick-start)
+- [Data Sources](#data-sources)
+- [Resources](#resources)
+- [Examples](#examples)
+- [Development](#development)
+- [License](#license)
+
 ## Features
 
 - **Power Management** - Control power state of individual compute nodes (1-4)
@@ -59,27 +77,15 @@ The modules repository includes helper scripts for cluster lifecycle management:
 
 > **Note:** The `turingpi_k3s_cluster` and `turingpi_talos_cluster` resources are deprecated and will be removed in v2.0.0. See the [Migration Guide](docs/MIGRATION.md) for upgrade instructions.
 
-## Related Projects
-
-Prefer Ansible over Terraform for provisioning? See the companion repo for K3s on Turing Pi RK1 (with NPU support):
-
-<a href="https://github.com/freed-dev-llc/turing-ansible-cluster"><img alt="Turing RK1 Ansible cluster" src="https://raw.githubusercontent.com/freed-dev-llc/turing-ansible-cluster/main/docs/assets/turing-cluster/logos/turing_cluster_logo_ansible_horizontal.svg" width="260"></a>
-
-Driving bare-metal with scripts instead? See the Talos Linux + K3s/Armbian cluster for Turing Pi RK1:
-
-[![Turing RK1 Cluster — freed-dev-llc/turing-rk1-cluster](docs/assets/buttons/btn_turing_rk1_cluster.svg)](https://github.com/freed-dev-llc/turing-rk1-cluster)
-
 ## Documentation
 
 - **[Architecture](docs/ARCHITECTURE.md)** - System diagrams, data flows, and component interactions
 - **[Migration Guide](docs/MIGRATION.md)** - Migrate from deprecated cluster resources
 - **[Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi)** - Provider documentation
 
-## Installation
+## Quick Start
 
-The provider is available on the [Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi). Terraform will automatically download it when you run `terraform init`.
-
-## Usage
+The provider is published on the [Terraform Registry](https://registry.terraform.io/providers/freed-dev-llc/turingpi) — `terraform init` downloads it automatically.
 
 ```hcl
 terraform {
