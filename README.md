@@ -46,6 +46,7 @@ A Terraform provider for managing Turing Pi's Baseboard Management Controller (B
 - **Talos Linux Support** - Built-in boot detection for Talos Linux clusters
 - **TLS Flexibility** - Skip certificate verification for self-signed or expired BMC certificates
 - **Environment Variables** - Configure provider via environment variables for CI/CD pipelines
+- **Transient Failure Retry** - BMC API calls automatically retry connection errors and 502/503/504 responses with exponential backoff
 
 See [TODO.md](TODO.md) for planned features, upcoming milestones, and what shipped in each release.
 
