@@ -12,7 +12,7 @@ import (
 const defaultEndpoint = "https://turingpi.local"
 
 // HTTPClient is the shared HTTP client for all API requests
-var HTTPClient = &http.Client{}
+var HTTPClient = &http.Client{Transport: newRetryTransport(http.DefaultTransport)}
 
 // ProviderConfig holds the configuration for the provider
 type ProviderConfig struct {
@@ -86,9 +86,9 @@ func configureProvider(_ context.Context, d *schema.ResourceData) (interface{}, 
 	// Configure HTTP client with TLS settings
 	if insecure {
 		HTTPClient = &http.Client{
-			Transport: &http.Transport{
+			Transport: newRetryTransport(&http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
+			}),
 		}
 	}
 

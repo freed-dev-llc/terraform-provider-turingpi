@@ -60,7 +60,7 @@ Items carried over from the original v1.4.0 plan (still pending after v1.6.0 shi
 ### Bug Fixes & Improvements
 - [ ] Handle partial failures gracefully in cluster resources
 - [ ] Improve error messages for common issues (partial: #46 fixed the most misleading one, `io: read/write on closed pipe`)
-- [ ] Add retry logic for transient BMC failures
+- [x] Add retry logic for transient BMC failures - shared `retryTransport` retries connection errors and 502/503/504 with exponential backoff (#113)
 
 ---
 
