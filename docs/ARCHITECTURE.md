@@ -421,6 +421,7 @@ terraform-provider-turingpi/
 │   ├── provider.go                      # Provider schema and config
 │   ├── auth.go                          # Authentication logic
 │   ├── helpers.go                       # Shared API helpers
+│   ├── http_retry.go                    # Retry transport for transient BMC failures
 │   ├── cluster_helpers.go               # Cluster provisioning utilities
 │   ├── ssh_client.go                    # SSH connection management
 │   ├── helm_client.go                   # Helm chart deployment
