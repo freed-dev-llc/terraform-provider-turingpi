@@ -2,7 +2,11 @@
 
 This file tracks planned features and implementation tasks for the Terraform Turing Pi provider.
 
-## Current Release: v1.6.0 (2026-06-20)
+## Current Release: v1.7.0 (2026-07-03)
+
+### Recently Completed (v1.6.0 → v1.7.0)
+
+- [x] **Retry logic for transient BMC failures**: shared `retryTransport` (`provider/http_retry.go`) retries connection errors and `502`/`503`/`504` responses with exponential backoff; other v1.7.0 "Polish & Stability" items remain open (#113)
 
 ### Recently Completed (v1.5.1 → v1.6.0)
 

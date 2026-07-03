@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-07-03
+
 ### Added
 
 - **Retry logic for transient BMC failures** (#113): all BMC API calls now go through a shared `retryTransport` (`provider/http_retry.go`) that retries connection errors and `502`/`503`/`504` responses up to 3 times with exponential backoff (250ms base, capped at 2s). `4xx` responses and non-replayable request bodies (the streaming multipart upload in `uploadFlashStream`) are never retried, and retries stop immediately on context cancellation.
