@@ -11,6 +11,18 @@ import (
 
 // Note: Uses HTTPClient from provider.go for TLS configuration
 
+// authHint returns a short suffix pointing at a stale session token when the
+// BMC responds 401, and an empty string otherwise. The provider does not
+// re-authenticate mid-apply (see configureProvider), so a token that expired
+// partway through a long-running apply surfaces as a 401 on whichever call
+// happens next.
+func authHint(statusCode int) string {
+	if statusCode == http.StatusUnauthorized {
+		return " (BMC session token may have expired - re-run apply)"
+	}
+	return ""
+}
+
 // checkPowerStatus returns "on" or "off" for the given 1-indexed node by
 // querying the BMC power endpoint.
 func checkPowerStatus(endpoint, token string, node int) (string, error) {

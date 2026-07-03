@@ -107,13 +107,13 @@ func enableUSBBoot(endpoint, token string, node int) error {
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return fmt.Errorf("USB boot enable request for node %d failed: %w", node, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("USB boot enable request for node %d returned status %d: %s%s", node, resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	return nil
@@ -131,13 +131,13 @@ func clearUSBBoot(endpoint, token string, node int) error {
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return fmt.Errorf("USB boot clear request for node %d failed: %w", node, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("USB boot clear request for node %d returned status %d: %s%s", node, resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	return nil

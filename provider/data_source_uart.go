@@ -89,13 +89,13 @@ func readUART(endpoint, token string, node int, encoding string) (string, error)
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("request failed: %w", err)
+		return "", fmt.Errorf("UART read request for node %d failed: %w", node, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("UART read for node %d returned status %d: %s%s", node, resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	var result uartReadResponse

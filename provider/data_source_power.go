@@ -132,13 +132,13 @@ func getPowerStatus(endpoint, token string) (*powerStatusResponse, error) {
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, fmt.Errorf("power status request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("power status request returned status %d: %s%s", resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	var result powerStatusResponse

@@ -182,13 +182,13 @@ func initBMCLocalFirmwareUpgrade(endpoint, token, filePath string) (string, erro
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("request failed: %w", err)
+		return "", fmt.Errorf("firmware upgrade init request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("firmware upgrade init returned status %d: %s%s", resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	var result firmwareInitResponse
@@ -232,13 +232,13 @@ func uploadAndInitFirmwareUpgrade(endpoint, token, filePath string) (string, err
 
 	initResp, err := HTTPClient.Do(initReq)
 	if err != nil {
-		return "", fmt.Errorf("init request failed: %w", err)
+		return "", fmt.Errorf("firmware upload init request failed: %w", err)
 	}
 	defer func() { _ = initResp.Body.Close() }()
 
 	if initResp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(initResp.Body)
-		return "", fmt.Errorf("init API returned status %d: %s", initResp.StatusCode, string(body))
+		return "", fmt.Errorf("firmware upload init returned status %d: %s%s", initResp.StatusCode, body, authHint(initResp.StatusCode))
 	}
 
 	var initResult firmwareInitResponse
@@ -302,13 +302,13 @@ func uploadFirmwareData(endpoint, token, handle string, file *os.File, filePath 
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("upload request failed: %w", err)
+		return fmt.Errorf("firmware upload request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("upload API returned status %d: %s", resp.StatusCode, string(respBody))
+		return fmt.Errorf("firmware upload returned status %d: %s%s", resp.StatusCode, respBody, authHint(resp.StatusCode))
 	}
 
 	return nil
@@ -326,7 +326,7 @@ func cancelFirmwareUpload(endpoint, token, handle string) error {
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("cancel request failed: %w", err)
+		return fmt.Errorf("firmware upload cancel request for handle %s failed: %w", handle, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -375,13 +375,13 @@ func getFlashProgress(endpoint, token string) (*flashProgressResponse, error) {
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, fmt.Errorf("firmware upgrade progress request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("firmware upgrade progress request returned status %d: %s%s", resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	var result flashProgressResponse
