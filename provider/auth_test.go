@@ -66,7 +66,7 @@ func TestAuthenticate_InvalidCredentials(t *testing.T) {
 		t.Fatal("expected error for invalid credentials, got nil")
 	}
 
-	expectedErr := "authentication failed with status: 401"
+	expectedErr := `BMC rejected credentials for "baduser" (status 401):  - check TURINGPI_USERNAME/TURINGPI_PASSWORD`
 	if err.Error() != expectedErr {
 		t.Errorf("expected error '%s', got '%s'", expectedErr, err.Error())
 	}
@@ -83,7 +83,7 @@ func TestAuthenticate_Forbidden(t *testing.T) {
 		t.Fatal("expected error for forbidden response, got nil")
 	}
 
-	expectedErr := "authentication failed with status: 403"
+	expectedErr := `BMC rejected credentials for "user" (status 403):  - check TURINGPI_USERNAME/TURINGPI_PASSWORD`
 	if err.Error() != expectedErr {
 		t.Errorf("expected error '%s', got '%s'", expectedErr, err.Error())
 	}
@@ -100,7 +100,7 @@ func TestAuthenticate_ServerError(t *testing.T) {
 		t.Fatal("expected error for server error, got nil")
 	}
 
-	expectedErr := "authentication failed with status: 500"
+	expectedErr := "BMC authentication returned status 500: "
 	if err.Error() != expectedErr {
 		t.Errorf("expected error '%s', got '%s'", expectedErr, err.Error())
 	}

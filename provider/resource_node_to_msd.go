@@ -100,13 +100,13 @@ func nodeToMSD(endpoint, token string, node int) error {
 
 	resp, err := HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return fmt.Errorf("node %d MSD-mode request failed: %w", node, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("node %d MSD-mode request returned status %d: %s%s", node, resp.StatusCode, body, authHint(resp.StatusCode))
 	}
 
 	return nil

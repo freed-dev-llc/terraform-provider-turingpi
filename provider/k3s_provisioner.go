@@ -141,7 +141,7 @@ func (p *K3sProvisioner) waitForK3sReady(node NodeConfig, timeout time.Duration)
 		time.Sleep(5 * time.Second)
 	}
 
-	return fmt.Errorf("timeout waiting for K3s to be ready after %v", timeout)
+	return fmt.Errorf("timeout waiting for K3s on %s to be ready after %v", node.Host, timeout)
 }
 
 // GetNodeToken retrieves the node token from the control plane
