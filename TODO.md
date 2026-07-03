@@ -101,9 +101,13 @@ Items carried over from the original v1.4.0 plan (still pending after v1.6.0 shi
 
 ---
 
-## Milestone: v2.0.0 - NPU Support (#116)
+## Milestone: v2.0.0 - RKNN/RKLLM Support (RK3588, vendor kernel) (#116)
 
-### NPU Support (RK3588) - Pending Kernel Support
+This is the proprietary RKNN/RKLLM stack, which requires the vendor (BSP)
+kernel and is therefore K3s-only - see the mainline/Talos note under
+"NPU Support Timeline" below for the separate, already-validated open-driver
+path.
+
 - [ ] Detect vendor kernel (6.1.x) for NPU compatibility
 - [ ] Install RKNN-Toolkit2 runtime
 - [ ] Install RKNN-LLM library
@@ -122,10 +126,9 @@ Items carried over from the original v1.4.0 plan (still pending after v1.6.0 shi
 - [ ] Document pros/cons of each approach
 
 ### NPU Support Timeline
-- [ ] Monitor mainline kernel NPU driver progress
-- [ ] Track Rockchip open-source driver efforts
-- [ ] Evaluate custom kernel builds for Talos
-- [ ] Update documentation when status changes
+- [x] Mainline kernel NPU driver (`rocket`) works today via Mesa's Teflon TFLite delegate - small CNNs only (MobileNet-class), no RKLLM. Validated on real RK1/Talos hardware in `turing-rk1-cluster` (2026-07-03): all 27 CONV/DWCONV layers of MobileNetV1 ran on the NPU (not CPU fallback), correct classification result. No distro packages this yet (built from Mesa source); see `turing-rk1-cluster/docs/NPU-TEFLON.md`.
+- [ ] Track Rockchip/Mesa upstream toward an official Teflon+rocket package (currently source-build only)
+- [ ] Re-evaluate this v2.0.0 milestone's scope once RKNN-Toolkit2/RKNN-LLM have a mainline-kernel path, if one ever appears
 
 ---
 
@@ -205,8 +208,8 @@ The original v1.5.0 "Additional Addons" milestone listed Prometheus stack, Porta
 | Base OS | Armbian (Debian) | Talos Linux |
 | Management | SSH + Ansible | talosctl API |
 | Mutability | Mutable (install packages) | Immutable |
-| NPU Support | ✅ Yes (vendor kernel) | ❌ No (mainline kernel) |
-| GPU Support | Limited | ❌ No |
+| NPU Support | Full (RKNN/RKLLM, vendor kernel) | Partial (open `rocket` driver + Mesa Teflon; CNNs only, no RKLLM) |
+| GPU Support | Limited | Partial (open `panthor` driver) |
 | Complexity | Higher (more config) | Lower (opinionated) |
 | Recovery | SSH access | API only |
 
