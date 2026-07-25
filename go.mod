@@ -8,7 +8,7 @@ require (
 	github.com/mittwald/go-helm-client v0.13.2
 	golang.org/x/crypto v0.54.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v4 v4.2.2
+	helm.sh/helm/v4 v4.2.3
 	k8s.io/client-go v0.36.2
 )
 
