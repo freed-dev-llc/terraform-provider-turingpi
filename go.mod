@@ -3,7 +3,7 @@ module github.com/freed-dev-llc/turingpi-terraform-provider
 go 1.26.3
 
 require (
-	github.com/hashicorp/terraform-plugin-log v0.10.0
+	github.com/hashicorp/terraform-plugin-log v0.11.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/mittwald/go-helm-client v0.13.2
 	golang.org/x/crypto v0.54.0
