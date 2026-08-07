@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-08-06
+
 ### Changed
 
 - **Improved BMC error messages** (#113): every BMC call site now names the operation it was attempting (e.g. "power request for node 2", "firmware upload init") instead of a generic "request failed" / "API returned status", and a `401` response now appends a hint that the session token may have expired. `authenticate()` distinguishes bad credentials (`401`/`403`) from other failures and includes the BMC's response body and the connection-level error (endpoint, cause) instead of swallowing it.
@@ -584,7 +586,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation workflow with GoReleaser
 - Multi-platform binaries (linux/darwin/windows, amd64/arm64)
 
-[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.7.0...v1.7.1
+[1.7.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.4.1...v1.5.0
