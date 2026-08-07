@@ -2,7 +2,12 @@
 
 This file tracks planned features and implementation tasks for the Terraform Turing Pi provider.
 
-## Current Release: v1.7.0 (2026-07-03)
+## Current Release: v1.7.1 (2026-08-06)
+
+### Recently Completed (v1.7.0 → v1.7.1)
+
+- [x] **Improved BMC error messages**: every BMC call site names the operation it was attempting, `401` responses hint at token expiry, and `authenticate()` distinguishes bad credentials from connection failures; another v1.7.0 "Polish & Stability" item done (#113, #135)
+- [x] **Dependencies**: grpc 1.80.0 → 1.82.1, helm/v4 4.2.2 → 4.2.3, go-helm-client 0.13.1 → 0.13.2, x/crypto 0.53.0 → 0.54.0, terraform-plugin-log 0.10.0 → 0.11.0, client-go 0.36.2 → 0.36.3, plus CI action bumps (#137-#149)
 
 ### Recently Completed (v1.6.0 → v1.7.0)
 
