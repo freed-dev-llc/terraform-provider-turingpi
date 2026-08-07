@@ -17,7 +17,7 @@ The Turing Pi provider enables Terraform-based management of [Turing Pi 2.5](htt
 - **Node Provisioning** - Combined resource for complete node management
 - **Talos Linux Support** - Built-in support for Talos Linux boot detection
 - **TLS Flexibility** - Skip certificate verification for self-signed or expired BMC certificates
-- **Transient Failure Retry** - BMC API calls automatically retry connection errors and 502/503/504 responses with exponential backoff
+- **Transient Failure Retry** - reads and idempotent BMC calls (power, reload, authenticate) retry connection errors and 502/503/504 responses with exponential backoff; mutations that are unsafe to repeat (flash, reset, firmware) get a single attempt
 
 ## Example Usage
 
