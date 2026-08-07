@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -17,9 +18,36 @@ const (
 // with a transient network error or a 502/503/504 response. Requests whose
 // body cannot be replayed (io.MultiReader over a streamed file, in
 // uploadFlashStream) are never retried, since RoundTrip is not permitted to
-// read a request body twice.
+// read a request body twice. Only requests that are safe to issue more than
+// once are retried at all (see retryableRequest).
 type retryTransport struct {
 	base http.RoundTripper
+}
+
+// retryableRequest reports whether req may safely be issued more than once.
+// The BMC performs mutations via GET (opt=set&type=...), so a transport
+// error does not prove the request never took effect: the daemon may have
+// acted and only the response was lost. Retrying in that window would
+// re-fire the mutation (a second reset reboots the node again; a second
+// flash init while the first transfer is starting can wedge the BMC in the
+// stuck-flash state that needs opt=set&type=reload to clear). Reads, the two
+// idempotent sets, and the authenticate POST are the only requests worth a
+// second attempt (#153).
+func retryableRequest(req *http.Request) bool {
+	if strings.HasSuffix(req.URL.Path, "/api/bmc/authenticate") {
+		return true
+	}
+	q := req.URL.Query()
+	switch q.Get("opt") {
+	case "get":
+		return true
+	case "set":
+		switch q.Get("type") {
+		case "power", "reload":
+			return true
+		}
+	}
+	return false
 }
 
 func newRetryTransport(base http.RoundTripper) http.RoundTripper {
@@ -31,6 +59,9 @@ func newRetryTransport(base http.RoundTripper) http.RoundTripper {
 
 func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.Body != nil && req.GetBody == nil {
+		return t.base.RoundTrip(req)
+	}
+	if !retryableRequest(req) {
 		return t.base.RoundTrip(req)
 	}
 
@@ -59,7 +90,9 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 		select {
 		case <-req.Context().Done():
-			return resp, err
+			// resp.Body was closed above; returning resp here would hand
+			// the caller a response it can no longer read (#152).
+			return nil, req.Context().Err()
 		case <-time.After(delay):
 		}
 

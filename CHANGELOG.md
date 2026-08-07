@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-08-07
+
+### Fixed
+
+- **`retryTransport`: cancellation during backoff returned an unreadable response** (#152): when the request context was cancelled between attempts, the transport returned the previous 5xx response with a nil error, but its body had already been closed in preparation for the retry. Callers read the closed body with `io.ReadAll`, discarded the read error, and lost the BMC's response text from their error messages. The transport now returns the context error instead, and the cancellation test asserts the caller gets an error rather than only counting attempts.
+- **`retryTransport`: retries are limited to requests that are safe to repeat** (#153): the BMC performs mutations via GET (`opt=set&type=...`), so a transport error cannot prove the request never took effect; the daemon may have acted and only the response was lost. Retrying in that window re-fires the mutation: a second `reset` reboots the node again, and a second flash or firmware init while the first transfer is starting can wedge the BMC in the stuck-flash state that needs `opt=set&type=reload` to clear. Retries now apply only to reads (`opt=get`), the idempotent `power` and `reload` sets, and the authenticate POST; every other request gets a single attempt. New tests cover the allowlist in both directions and verify the authenticate body is replayed intact across attempts.
+
 ## [1.7.1] - 2026-08-06
 
 ### Changed
@@ -586,7 +593,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release automation workflow with GoReleaser
 - Multi-platform binaries (linux/darwin/windows, amd64/arm64)
 
-[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/freed-dev-llc/terraform-provider-turingpi/compare/v1.5.1...v1.6.0
