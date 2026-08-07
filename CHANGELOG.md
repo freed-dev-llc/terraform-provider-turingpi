@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Improved BMC error messages** (#113): every BMC call site now names the operation it was attempting (e.g. "power request for node 2", "firmware upload init") instead of a generic "request failed" / "API returned status", and a `401` response now appends a hint that the session token may have expired. `authenticate()` distinguishes bad credentials (`401`/`403`) from other failures and includes the BMC's response body and the connection-level error (endpoint, cause) instead of swallowing it.
 
+### Dependencies
+
+- ci: bump github/codeql-action/upload-sarif from 4.36.2 to 4.37.4 (#138, #139, #143, #146, #149)
+- ci: bump golangci/golangci-lint-action from 9.2.1 to 9.3.0 (#137)
+- ci: bump actions/setup-go from 6.5.0 to 7.0.0 (#144)
+- deps: bump golang.org/x/crypto from 0.53.0 to 0.54.0 (#140)
+- deps: bump github.com/mittwald/go-helm-client from 0.13.1 to 0.13.2 (#141)
+- deps: bump helm.sh/helm/v4 from 4.2.2 to 4.2.3 (#142)
+- deps: bump google.golang.org/grpc from 1.80.0 to 1.82.1 and oras.land/oras-go/v2 from 2.6.1 to 2.6.2 (#145)
+- deps: bump k8s.io/client-go from 0.36.2 to 0.36.3 (#147)
+- deps: bump github.com/hashicorp/terraform-plugin-log from 0.10.0 to 0.11.0 (#148)
+
 ## [1.7.0] - 2026-07-03
 
 ### Added
