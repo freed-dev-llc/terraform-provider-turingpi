@@ -5,7 +5,7 @@ go 1.26.3
 require (
 	github.com/hashicorp/terraform-plugin-log v0.11.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
-	github.com/mittwald/go-helm-client v0.13.2
+	github.com/mittwald/go-helm-client v0.13.3
 	golang.org/x/crypto v0.55.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v4 v4.2.4
