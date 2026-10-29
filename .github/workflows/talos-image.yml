@@ -24,7 +24,7 @@ env:
 jobs:
   check-version:
     name: Check Talos Version
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     outputs:
       update_needed: ${{ steps.check.outputs.update_needed }}
       upstream_version: ${{ steps.check.outputs.upstream_version }}
@@ -84,7 +84,7 @@ jobs:
     name: Update Talos Image
     needs: check-version
     if: needs.check-version.outputs.update_needed == 'true'
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

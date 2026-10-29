@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -43,7 +43,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   lint:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -63,7 +63,7 @@ jobs:
     # dev_overrides bypasses the registry). Catches provider-loading
     # regressions in either tool (manifest schema, plugin protocol
     # handshake).
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -102,9 +102,9 @@ jobs:
       - name: Write dev_overrides CLI config
         # Write to $RUNNER_TEMP (auto-cleaned per job) and point the CLI at
         # it via TF_CLI_CONFIG_FILE (honored by both terraform and tofu).
-        # Avoids polluting the persistent self-hosted runner's $HOME, which
-        # had been leaking stale dev_overrides paths into unrelated
-        # workflows on the same runner (cf. terraform-turingpi-modules#23).
+        # Avoids writing to the runner's $HOME, which had leaked stale
+        # dev_overrides paths into unrelated workflows on a persistent
+        # self-hosted runner (cf. terraform-turingpi-modules#23).
         run: |
           CFG="$RUNNER_TEMP/cli-smoketest.tfrc"
           cat > "$CFG" << EOF
